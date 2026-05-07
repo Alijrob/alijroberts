@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS canvas_folders (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS canvas_documents (
+  id SERIAL PRIMARY KEY,
+  folder_id INTEGER NOT NULL REFERENCES canvas_folders(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);

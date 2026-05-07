@@ -1,0 +1,23 @@
+{
+  "name": "das-platform",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "node scripts/migrate.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "dotenv": "^16.4.7",
+    "fastify": "^4.28.1",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Dock — RAVEN</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d0d0d; color: #fff; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: #1c1c1c; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 2.5rem; max-width: 420px; width: 100%; text-align: center; }
+    h1 { font-size: 1.4rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    p { font-size: 0.82rem; color: rgba(255,255,255,0.45); margin-bottom: 2rem; }
+    input[type="file"] { display: none; }
+    label.drop { display: block; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 2rem; cursor: pointer; margin-bottom: 1.5rem; font-size: 0.85rem; color: rgba(255,255,255,0.5); transition: border-color 0.2s; }
+    label.drop:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+    label.drop.has-file { border-color: rgba(255,255,255,0.6); color: #fff; }
+    button { background: #fff; color: #0d0d0d; border: none; border-radius: 8px; padding: 0.75rem 2rem; font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
+    #status { margin-top: 1.25rem; font-size: 0.85rem; }
+    .ok { color: #4ade80; }
+    .err { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Upload Dock</h1>
+    <p>One-time use — drop the RAVEN background image here.</p>
+    <label class="drop" id="dropLabel" for="fileInput">
+      Click or drag image here
+    </label>
+    <input type="file" id="fileInput" accept="image/*" />
+    <button id="uploadBtn" disabled>Upload</button>
+    <div id="status"></div>
+  </div>
+  <script>
+    const input = document.getElementById('fileInput');
+    const label = document.getElementById('dropLabel');
+    const btn = document.getElementById('uploadBtn');
+    const status = document.getElementById('status');
+
+    input.addEventListener('change', () => {
+      if (input.files[0]) {
+        label.textContent = input.files[0].name;
+        label.classList.add('has-file');
+        btn.disabled = false;
+      }
+    });
+
+    btn.addEventListener('click', async () => {
+      if (!input.files[0]) return;
+      btn.disabled = true;
+      btn.textContent = 'Uploading…';
+      status.textContent = '';
+      const fd = new FormData();
+      fd.append('image', input.files[0]);
+      try {
+        const res = await fetch('/api/dock/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.ok) {
+          status.innerHTML = '<span class="ok">Saved as ' + data.saved + ' — you can close this tab.</span>';
+          btn.textContent = 'Done';
+        } else {
+          status.innerHTML = '<span class="err">Error: ' + (data.error || 'unknown') + '</span>';
+          btn.disabled = false;
+          btn.textContent = 'Upload';
+        }
+      } catch (e) {
+        status.innerHTML = '<span class="err">Upload failed — check console.</span>';
+        btn.disabled = false;
+        btn.textContent = 'Upload';
+      }
+    });
+  </script>
+</body>
+</html>

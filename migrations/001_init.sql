@@ -1,0 +1,6 @@
+-- Migration tracker
+CREATE TABLE IF NOT EXISTS migrations (
+  id SERIAL PRIMARY KEY,
+  filename TEXT NOT NULL UNIQUE,
+  run_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
