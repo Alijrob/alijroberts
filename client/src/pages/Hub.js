@@ -32,7 +32,13 @@ function ComingSoon({ module }) {
     return (_jsxs("div", { style: { padding: '4rem 2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: '#888' }, children: [_jsx("p", { style: { fontSize: '1.1rem', fontWeight: 600, color: '#111', margin: 0 }, children: labels[module] }), _jsx("p", { style: { fontSize: '0.875rem', margin: 0 }, children: "This module is coming soon." })] }));
 }
 export default function Hub({ brand, onBrandRefresh, onLogout }) {
-    const [activeModule, setActiveModule] = useState('dashboard');
+    const [activeModule, setActiveModule] = useState(() => {
+        if (typeof window === 'undefined')
+            return 'dashboard';
+        const hash = window.location.hash.replace(/^#/, '');
+        const valid = ['dashboard', 'agenda', 'crm', 'todo', 'calendar', 'email', 'files', 'operations', 'raven', 'daedalus', 'blueprint', 'newspaper', 'settings', 'apiassist', 'agent-bridges', 'systems'];
+        return valid.includes(hash) ? hash : 'dashboard';
+    });
     const [collapsed, setCollapsed] = useState(false);
     return (_jsxs(HubLayout, { activeModule: activeModule, onNavigate: (m) => setActiveModule(m), collapsed: collapsed, onToggle: () => setCollapsed(c => !c), brand: brand, onProfileSaved: onBrandRefresh, onLogout: onLogout, onOpenApiAssist: () => setActiveModule('apiassist'), children: [activeModule === 'dashboard' && _jsx(Dashboard, { brand: brand }), activeModule === 'apiassist' && _jsx(ApiAssist, {}), activeModule === 'files' && _jsx(MediaFiles, {}), activeModule === 'agent-bridges' && _jsx(AgentBridges, {}), activeModule === 'email' && _jsx(EmailModule, {}), activeModule === 'calendar' && _jsx(CalendarModule, {}), activeModule === 'todo' && _jsx(TasksModule, {}), activeModule === 'blueprint' && _jsx(Blueprint, {}), activeModule === 'systems' && _jsx(Systems, {}), activeModule !== 'dashboard' && activeModule !== 'apiassist' &&
                 activeModule !== 'files' && activeModule !== 'agent-bridges' && activeModule !== 'email' &&

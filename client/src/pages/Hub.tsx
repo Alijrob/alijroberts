@@ -51,7 +51,12 @@ function ComingSoon({ module }: { module: HubModule }) {
 }
 
 export default function Hub({ brand, onBrandRefresh, onLogout }: Props) {
-  const [activeModule, setActiveModule] = useState<HubModule>('dashboard');
+  const [activeModule, setActiveModule] = useState<HubModule>(() => {
+    if (typeof window === 'undefined') return 'dashboard';
+    const hash = window.location.hash.replace(/^#/, '');
+    const valid: ReadonlyArray<HubModule> = ['dashboard','agenda','crm','todo','calendar','email','files','operations','raven','daedalus','blueprint','newspaper','settings','apiassist','agent-bridges','systems'];
+    return (valid as readonly string[]).includes(hash) ? (hash as HubModule) : 'dashboard';
+  });
   const [collapsed, setCollapsed] = useState(false);
 
   return (
