@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { renderSidebarIcon } from '../modules/systems/sidebarIcons';
 import ProfilePanel from '../components/hub/ProfilePanel';
 import Chat from '../modules/chat/Chat';
 import SettingsWindow, { type SettingsSection } from '../modules/settings/SettingsWindow';
 
-export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'canvas' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges';
+export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems';
 
 interface BrandData {
   displayName: string | null;
@@ -91,7 +92,7 @@ const DASHBOARD_CHILDREN: { id: HubModule; label: string; icon: React.ReactNode 
 
 const DASHBOARD_IDS: HubModule[] = ['dashboard', 'todo', 'calendar', 'crm', 'email'];
 
-const OPERATIONS_CHILDREN: { id: HubModule; label: string; icon: React.ReactNode }[] = [
+const OPERATIONS_CHILDREN: { id: string; label: string; icon: React.ReactNode; href?: string }[] = [
   {
     id: 'raven',
     label: 'Raven',
@@ -100,29 +101,6 @@ const OPERATIONS_CHILDREN: { id: HubModule; label: string; icon: React.ReactNode
         <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
         <line x1="16" y1="8" x2="2" y2="22" />
         <line x1="17.5" y1="15" x2="9" y2="15" />
-      </svg>
-    ),
-  },
-  {
-    id: 'daedalus',
-    label: 'Daedalus',
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-      </svg>
-    ),
-  },
-  {
-    id: 'blueprint',
-    label: 'Blueprint',
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="8" y1="13" x2="16" y2="13" />
-        <line x1="8" y1="17" x2="16" y2="17" />
-        <line x1="10" y1="9" x2="14" y2="9" />
       </svg>
     ),
   },
@@ -140,7 +118,7 @@ const OPERATIONS_CHILDREN: { id: HubModule; label: string; icon: React.ReactNode
   },
 ];
 
-const OPERATIONS_IDS: HubModule[] = ['raven', 'daedalus', 'blueprint', 'newspaper'];
+const OPERATIONS_IDS: HubModule[] = ['raven', 'newspaper'];
 
 const SETTINGS_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -211,10 +189,12 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
   const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>('security');
-  const [toolsOpen, setToolsOpen] = useState(false);
-  const [bridgesOpen, setBridgesOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [operationsOpen, setOperationsOpen] = useState(false);
+  const [userLinks, setUserLinks] = useState<Array<{ id: number; label: string; url: string; icon_key: string }>>([]);
+  useEffect(() => {
+    fetch('/api/sidebar-links').then(r => r.ok ? r.json() : []).then(setUserLinks).catch(() => setUserLinks([]));
+  }, []);
   const openSettings = (section: SettingsSection) => {
     setSettingsSection(section);
     setSettingsOpen(true);
@@ -290,7 +270,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '5px', background: METALLIC_GOLD, zIndex: 3 }} />
         <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'stretch', height: '100%' }}>
           <img src={logoUrl} alt="logo" style={{
-            height: `${TOPBAR_H}px`, width: `${TOPBAR_H}px`, objectFit: 'cover', display: 'block',
+            height: `${TOPBAR_H}px`, width: `${sidebarWidth}px`, objectFit: 'cover', display: 'block',
             filter: 'drop-shadow(0 0 12px rgba(201,168,64,0.7)) drop-shadow(0 0 24px rgba(201,168,64,0.35))',
             borderWidth: '0 5px 0 0', borderStyle: 'solid',
             borderImage: 'linear-gradient(180deg, #5c3d08 0%, #b8860b 20%, #f0d060 45%, #fffacd 55%, #f0d060 70%, #b8860b 85%, #5c3d08 100%) 1',
@@ -492,116 +472,74 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
               {OPERATIONS_CHILDREN.map(item => {
                 const isActive = activeModule === item.id;
                 const isHov = hoveredItem === `ops-${item.id}`;
+                const baseStyle: React.CSSProperties = {
+                  display: 'flex', alignItems: 'center', gap: '0.6rem',
+                  padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                  background: isActive ? 'rgba(201,168,64,0.14)' : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                  border: 'none',
+                  borderLeft: isActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                  color: isActive ? GOLD : 'rgba(255,255,255,0.7)',
+                  cursor: 'pointer', fontSize: '0.92rem', fontWeight: isActive ? 700 : 400,
+                  width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                  transition: 'background 0.15s, color 0.15s',
+                  textDecoration: 'none',
+                };
+                if (item.href) {
+                  return (
+                    <a
+                      key={item.id}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onMouseEnter={() => setHoveredItem(`ops-${item.id}`)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                      style={baseStyle}
+                    >
+                      <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </a>
+                  );
+                }
                 return (
                   <button
                     key={item.id}
                     onClick={() => window.location.href = '/' + item.id}
                     onMouseEnter={() => setHoveredItem(`ops-${item.id}`)}
                     onMouseLeave={() => setHoveredItem(null)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '0.6rem',
-                      padding: '0.65rem 1.1rem 0.65rem 2.2rem',
-                      background: isActive ? 'rgba(201,168,64,0.14)' : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
-                      border: 'none',
-                      borderLeft: isActive ? `3px solid ${GOLD}` : '3px solid transparent',
-                      color: isActive ? GOLD : 'rgba(255,255,255,0.7)',
-                      cursor: 'pointer', fontSize: '0.92rem', fontWeight: isActive ? 700 : 400,
-                      width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                      transition: 'background 0.15s, color 0.15s',
-                    }}
+                    style={baseStyle}
                   >
                     <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
                     <span>{item.label}</span>
                   </button>
                 );
               })}
-            </>
-          )}
-
-          {/* Tools group */}
-          <button
-            onClick={() => !collapsed && setToolsOpen(o => !o)}
-            onMouseEnter={() => setHoveredItem('tools-group')}
-            onMouseLeave={() => setHoveredItem(null)}
-            title={collapsed ? 'Tools' : undefined}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.85rem',
-              padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
-              justifyContent: collapsed ? 'center' : 'space-between',
-              background: hoveredItem === 'tools-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
-              border: 'none', borderLeft: '3px solid transparent',
-              color: 'rgba(255,255,255,0.82)', cursor: 'pointer', fontSize: '1rem', fontWeight: 400,
-              width: '100%', textAlign: 'left', transition: 'background 0.15s', whiteSpace: 'nowrap', overflow: 'hidden',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <span style={{ flexShrink: 0, display: 'flex' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                </svg>
-              </span>
-              {!collapsed && <span>Tools</span>}
-            </div>
-            {!collapsed && <span style={{ fontSize: '0.65rem', opacity: 0.5 }}>{toolsOpen ? '▲' : '▼'}</span>}
-          </button>
-
-          {toolsOpen && !collapsed && (
-            <>
-              <button
-                onMouseEnter={() => setHoveredItem('tools-tools')}
-                onMouseLeave={() => setHoveredItem(null)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.85rem',
-                  padding: '0.65rem 1.1rem 0.65rem 2.2rem',
-                  background: hoveredItem === 'tools-tools' ? 'rgba(255,255,255,0.05)' : 'transparent',
-                  border: 'none', borderLeft: '3px solid transparent',
-                  color: 'rgba(255,255,255,0.65)', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 400,
-                  width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                <span>Tools</span>
-              </button>
-
-              <button
-                onClick={() => setBridgesOpen(o => !o)}
-                onMouseEnter={() => setHoveredItem('tools-bridges')}
-                onMouseLeave={() => setHoveredItem(null)}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '0.65rem 1.1rem 0.65rem 2.2rem',
-                  background: hoveredItem === 'tools-bridges' ? 'rgba(255,255,255,0.05)' : 'transparent',
-                  border: 'none', borderLeft: '3px solid transparent',
-                  color: 'rgba(255,255,255,0.65)', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 400,
-                  width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  <span>Bridges</span>
-                </div>
-                <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>{bridgesOpen ? '▲' : '▼'}</span>
-              </button>
-
-              {bridgesOpen && (
-                <button
-                  onClick={() => onNavigate('agent-bridges')}
-                  onMouseEnter={() => setHoveredItem('agent-bridges')}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.6rem',
-                    padding: '0.6rem 1.1rem 0.6rem 3.2rem',
-                    background: activeModule === 'agent-bridges' ? 'rgba(201,168,64,0.16)' : hoveredItem === 'agent-bridges' ? 'rgba(255,255,255,0.07)' : 'transparent',
-                    border: 'none', borderLeft: activeModule === 'agent-bridges' ? `3px solid ${GOLD}` : '3px solid transparent',
-                    color: activeModule === 'agent-bridges' ? GOLD : 'rgba(255,255,255,0.7)',
-                    cursor: 'pointer', fontSize: '0.88rem', fontWeight: activeModule === 'agent-bridges' ? 700 : 400,
-                    width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                  }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-                  Agent Bridges
-                </button>
-              )}
+              {userLinks.map(link => {
+                const isHov = hoveredItem === `ops-user-${link.id}`;
+                return (
+                  <a
+                    key={`user-${link.id}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onMouseEnter={() => setHoveredItem(`ops-user-${link.id}`)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.6rem',
+                      padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                      background: isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                      border: 'none', borderLeft: '3px solid transparent',
+                      color: 'rgba(255,255,255,0.7)',
+                      cursor: 'pointer', fontSize: '0.92rem', fontWeight: 400,
+                      width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                      transition: 'background 0.15s, color 0.15s',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <span style={{ flexShrink: 0, display: 'flex' }}>{renderSidebarIcon(link.icon_key)}</span>
+                    <span>{link.label}</span>
+                  </a>
+                );
+              })}
             </>
           )}
 
@@ -621,23 +559,6 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
             {!collapsed && <span>Files</span>}
           </button>
 
-          {/* Canvas */}
-          <button
-            onClick={() => onNavigate('canvas')}
-            onMouseEnter={() => setHoveredItem('canvas')}
-            onMouseLeave={() => setHoveredItem(null)}
-            title={collapsed ? 'Canvas' : undefined}
-            style={navItemStyle('canvas')}
-          >
-            <span style={{ flexShrink: 0, display: 'flex' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="16 16 12 12 8 16" />
-                <line x1="12" y1="12" x2="12" y2="21" />
-                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
-              </svg>
-            </span>
-            {!collapsed && <span>Canvas</span>}
-          </button>
         </nav>
 
         {/* Menu (bottom) */}
@@ -700,6 +621,30 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                   </svg>
                 </span>
                 <span>API Assist</span>
+              </button>
+              <button
+                onClick={() => { onNavigate('systems'); setHubMenuOpen(false); }}
+                onMouseEnter={() => setHoveredItem('systems-sub')}
+                onMouseLeave={() => setHoveredItem(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.85rem',
+                  padding: '0.75rem 1.1rem 0.75rem 1.6rem',
+                  background: activeModule === 'systems' ? 'rgba(201,168,64,0.14)' : hoveredItem === 'systems-sub' ? 'rgba(255,255,255,0.06)' : 'transparent',
+                  border: 'none', borderLeft: activeModule === 'systems' ? `3px solid ${GOLD}` : '3px solid transparent',
+                  color: activeModule === 'systems' ? GOLD : 'rgba(255,255,255,0.75)',
+                  cursor: 'pointer', fontSize: '1rem', fontWeight: activeModule === 'systems' ? 700 : 400,
+                  width: '100%', textAlign: 'left', whiteSpace: 'nowrap', transition: 'background 0.15s',
+                }}
+              >
+                <span style={{ display: 'flex' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="6" rx="1"/>
+                    <rect x="2" y="15" width="20" height="6" rx="1"/>
+                    <line x1="6" y1="6" x2="6.01" y2="6"/>
+                    <line x1="6" y1="18" x2="6.01" y2="18"/>
+                  </svg>
+                </span>
+                <span>Systems</span>
               </button>
               <button
                 onClick={() => { setHubMenuOpen(false); onLogout(); }}

@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { renderSidebarIcon } from '../modules/systems/sidebarIcons';
 import ProfilePanel from '../components/hub/ProfilePanel';
 import Chat from '../modules/chat/Chat';
 import SettingsWindow from '../modules/settings/SettingsWindow';
@@ -46,22 +47,12 @@ const OPERATIONS_CHILDREN = [
         icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" }), _jsx("line", { x1: "16", y1: "8", x2: "2", y2: "22" }), _jsx("line", { x1: "17.5", y1: "15", x2: "9", y2: "15" })] })),
     },
     {
-        id: 'daedalus',
-        label: 'Daedalus',
-        icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("circle", { cx: "12", cy: "12", r: "10" }), _jsx("polygon", { points: "16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" })] })),
-    },
-    {
-        id: 'blueprint',
-        label: 'Blueprint',
-        icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), _jsx("polyline", { points: "14 2 14 8 20 8" }), _jsx("line", { x1: "8", y1: "13", x2: "16", y2: "13" }), _jsx("line", { x1: "8", y1: "17", x2: "16", y2: "17" }), _jsx("line", { x1: "10", y1: "9", x2: "14", y2: "9" })] })),
-    },
-    {
         id: 'newspaper',
         label: 'Newspaper',
         icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" }), _jsx("line", { x1: "10", y1: "7", x2: "18", y2: "7" }), _jsx("line", { x1: "10", y1: "11", x2: "18", y2: "11" }), _jsx("line", { x1: "10", y1: "15", x2: "14", y2: "15" })] })),
     },
 ];
-const OPERATIONS_IDS = ['raven', 'daedalus', 'blueprint', 'newspaper'];
+const OPERATIONS_IDS = ['raven', 'newspaper'];
 const SETTINGS_ICON = (_jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("circle", { cx: "12", cy: "12", r: "3" }), _jsx("path", { d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" })] }));
 function useClock() {
     const [now, setNow] = useState(new Date());
@@ -124,10 +115,12 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
     const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [settingsSection, setSettingsSection] = useState('security');
-    const [toolsOpen, setToolsOpen] = useState(false);
-    const [bridgesOpen, setBridgesOpen] = useState(false);
     const [dashboardOpen, setDashboardOpen] = useState(false);
     const [operationsOpen, setOperationsOpen] = useState(false);
+    const [userLinks, setUserLinks] = useState([]);
+    useEffect(() => {
+        fetch('/api/sidebar-links').then(r => r.ok ? r.json() : []).then(setUserLinks).catch(() => setUserLinks([]));
+    }, []);
     const openSettings = (section) => {
         setSettingsSection(section);
         setSettingsOpen(true);
@@ -183,7 +176,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                     zIndex: 200,
                     overflow: 'hidden',
                 }, children: [textureLayers, _jsx("div", { style: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '5px', background: METALLIC_GOLD, zIndex: 3 } }), _jsx("div", { style: { position: 'relative', zIndex: 2, display: 'flex', alignItems: 'stretch', height: '100%' }, children: _jsx("img", { src: logoUrl, alt: "logo", style: {
-                                height: `${TOPBAR_H}px`, width: `${TOPBAR_H}px`, objectFit: 'cover', display: 'block',
+                                height: `${TOPBAR_H}px`, width: `${sidebarWidth}px`, objectFit: 'cover', display: 'block',
                                 filter: 'drop-shadow(0 0 12px rgba(201,168,64,0.7)) drop-shadow(0 0 24px rgba(201,168,64,0.35))',
                                 borderWidth: '0 5px 0 0', borderStyle: 'solid',
                                 borderImage: 'linear-gradient(180deg, #5c3d08 0%, #b8860b 20%, #f0d060 45%, #fffacd 55%, #f0d060 70%, #b8860b 85%, #5c3d08 100%) 1',
@@ -248,10 +241,10 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                                     cursor: 'pointer', fontSize: '1rem', fontWeight: isOperationsActive ? 700 : 400,
                                     width: '100%', textAlign: 'left', transition: 'background 0.15s, color 0.15s',
                                     whiteSpace: 'nowrap', overflow: 'hidden',
-                                }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: '0.85rem' }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M12 2L2 7l10 5 10-5-10-5z" }), _jsx("path", { d: "M2 17l10 5 10-5" }), _jsx("path", { d: "M2 12l10 5 10-5" })] }) }), !collapsed && _jsx("span", { children: "Operations" })] }), !collapsed && _jsx("span", { style: { fontSize: '0.65rem', opacity: 0.5 }, children: operationsOpen ? '▲' : '▼' })] }), operationsOpen && !collapsed && (_jsx(_Fragment, { children: OPERATIONS_CHILDREN.map(item => {
-                                    const isActive = activeModule === item.id;
-                                    const isHov = hoveredItem === `ops-${item.id}`;
-                                    return (_jsxs("button", { onClick: () => window.location.href = '/' + item.id, onMouseEnter: () => setHoveredItem(`ops-${item.id}`), onMouseLeave: () => setHoveredItem(null), style: {
+                                }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: '0.85rem' }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M12 2L2 7l10 5 10-5-10-5z" }), _jsx("path", { d: "M2 17l10 5 10-5" }), _jsx("path", { d: "M2 12l10 5 10-5" })] }) }), !collapsed && _jsx("span", { children: "Operations" })] }), !collapsed && _jsx("span", { style: { fontSize: '0.65rem', opacity: 0.5 }, children: operationsOpen ? '▲' : '▼' })] }), operationsOpen && !collapsed && (_jsxs(_Fragment, { children: [OPERATIONS_CHILDREN.map(item => {
+                                        const isActive = activeModule === item.id;
+                                        const isHov = hoveredItem === `ops-${item.id}`;
+                                        const baseStyle = {
                                             display: 'flex', alignItems: 'center', gap: '0.6rem',
                                             padding: '0.65rem 1.1rem 0.65rem 2.2rem',
                                             background: isActive ? 'rgba(201,168,64,0.14)' : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
@@ -261,38 +254,26 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                                             cursor: 'pointer', fontSize: '0.92rem', fontWeight: isActive ? 700 : 400,
                                             width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
                                             transition: 'background 0.15s, color 0.15s',
-                                        }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: item.icon }), _jsx("span", { children: item.label })] }, item.id));
-                                }) })), _jsxs("button", { onClick: () => !collapsed && setToolsOpen(o => !o), onMouseEnter: () => setHoveredItem('tools-group'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Tools' : undefined, style: {
-                                    display: 'flex', alignItems: 'center', gap: '0.85rem',
-                                    padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
-                                    justifyContent: collapsed ? 'center' : 'space-between',
-                                    background: hoveredItem === 'tools-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
-                                    border: 'none', borderLeft: '3px solid transparent',
-                                    color: 'rgba(255,255,255,0.82)', cursor: 'pointer', fontSize: '1rem', fontWeight: 400,
-                                    width: '100%', textAlign: 'left', transition: 'background 0.15s', whiteSpace: 'nowrap', overflow: 'hidden',
-                                }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: '0.85rem' }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" }) }) }), !collapsed && _jsx("span", { children: "Tools" })] }), !collapsed && _jsx("span", { style: { fontSize: '0.65rem', opacity: 0.5 }, children: toolsOpen ? '▲' : '▼' })] }), toolsOpen && !collapsed && (_jsxs(_Fragment, { children: [_jsxs("button", { onMouseEnter: () => setHoveredItem('tools-tools'), onMouseLeave: () => setHoveredItem(null), style: {
-                                            display: 'flex', alignItems: 'center', gap: '0.85rem',
-                                            padding: '0.65rem 1.1rem 0.65rem 2.2rem',
-                                            background: hoveredItem === 'tools-tools' ? 'rgba(255,255,255,0.05)' : 'transparent',
-                                            border: 'none', borderLeft: '3px solid transparent',
-                                            color: 'rgba(255,255,255,0.65)', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 400,
-                                            width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                                        }, children: [_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [_jsx("rect", { x: "2", y: "7", width: "20", height: "14", rx: "2" }), _jsx("path", { d: "M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" })] }), _jsx("span", { children: "Tools" })] }), _jsxs("button", { onClick: () => setBridgesOpen(o => !o), onMouseEnter: () => setHoveredItem('tools-bridges'), onMouseLeave: () => setHoveredItem(null), style: {
-                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            padding: '0.65rem 1.1rem 0.65rem 2.2rem',
-                                            background: hoveredItem === 'tools-bridges' ? 'rgba(255,255,255,0.05)' : 'transparent',
-                                            border: 'none', borderLeft: '3px solid transparent',
-                                            color: 'rgba(255,255,255,0.65)', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 400,
-                                            width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                                        }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: '0.6rem' }, children: [_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [_jsx("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }), _jsx("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" })] }), _jsx("span", { children: "Bridges" })] }), _jsx("span", { style: { fontSize: '0.6rem', opacity: 0.5 }, children: bridgesOpen ? '▲' : '▼' })] }), bridgesOpen && (_jsxs("button", { onClick: () => onNavigate('agent-bridges'), onMouseEnter: () => setHoveredItem('agent-bridges'), onMouseLeave: () => setHoveredItem(null), style: {
-                                            display: 'flex', alignItems: 'center', gap: '0.6rem',
-                                            padding: '0.6rem 1.1rem 0.6rem 3.2rem',
-                                            background: activeModule === 'agent-bridges' ? 'rgba(201,168,64,0.16)' : hoveredItem === 'agent-bridges' ? 'rgba(255,255,255,0.07)' : 'transparent',
-                                            border: 'none', borderLeft: activeModule === 'agent-bridges' ? `3px solid ${GOLD}` : '3px solid transparent',
-                                            color: activeModule === 'agent-bridges' ? GOLD : 'rgba(255,255,255,0.7)',
-                                            cursor: 'pointer', fontSize: '0.88rem', fontWeight: activeModule === 'agent-bridges' ? 700 : 400,
-                                            width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                                        }, children: [_jsxs("svg", { width: "13", height: "13", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [_jsx("circle", { cx: "12", cy: "12", r: "3" }), _jsx("path", { d: "M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" })] }), "Agent Bridges"] }))] })), _jsxs("button", { onClick: () => onNavigate('files'), onMouseEnter: () => setHoveredItem('files'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Files' : undefined, style: navItemStyle('files'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }) }) }), !collapsed && _jsx("span", { children: "Files" })] }), _jsxs("button", { onClick: () => onNavigate('canvas'), onMouseEnter: () => setHoveredItem('canvas'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Canvas' : undefined, style: navItemStyle('canvas'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("polyline", { points: "16 16 12 12 8 16" }), _jsx("line", { x1: "12", y1: "12", x2: "12", y2: "21" }), _jsx("path", { d: "M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" })] }) }), !collapsed && _jsx("span", { children: "Canvas" })] })] }), _jsxs("div", { style: { position: 'relative', zIndex: 2, borderTop: `1px solid ${GOLD}33` }, children: [hubMenuOpen && !collapsed && (_jsxs("div", { style: { background: 'rgba(0,0,0,0.28)', borderBottom: `1px solid ${GOLD}22` }, children: [_jsxs("button", { onClick: () => { openSettings('security'); setHubMenuOpen(false); }, onMouseEnter: () => setHoveredItem('settings-sub'), onMouseLeave: () => setHoveredItem(null), style: {
+                                            textDecoration: 'none',
+                                        };
+                                        if (item.href) {
+                                            return (_jsxs("a", { href: item.href, target: "_blank", rel: "noopener noreferrer", onMouseEnter: () => setHoveredItem(`ops-${item.id}`), onMouseLeave: () => setHoveredItem(null), style: baseStyle, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: item.icon }), _jsx("span", { children: item.label })] }, item.id));
+                                        }
+                                        return (_jsxs("button", { onClick: () => window.location.href = '/' + item.id, onMouseEnter: () => setHoveredItem(`ops-${item.id}`), onMouseLeave: () => setHoveredItem(null), style: baseStyle, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: item.icon }), _jsx("span", { children: item.label })] }, item.id));
+                                    }), userLinks.map(link => {
+                                        const isHov = hoveredItem === `ops-user-${link.id}`;
+                                        return (_jsxs("a", { href: link.url, target: "_blank", rel: "noopener noreferrer", onMouseEnter: () => setHoveredItem(`ops-user-${link.id}`), onMouseLeave: () => setHoveredItem(null), style: {
+                                                display: 'flex', alignItems: 'center', gap: '0.6rem',
+                                                padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                                                background: isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                                border: 'none', borderLeft: '3px solid transparent',
+                                                color: 'rgba(255,255,255,0.7)',
+                                                cursor: 'pointer', fontSize: '0.92rem', fontWeight: 400,
+                                                width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                                                transition: 'background 0.15s, color 0.15s',
+                                                textDecoration: 'none',
+                                            }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: renderSidebarIcon(link.icon_key) }), _jsx("span", { children: link.label })] }, `user-${link.id}`));
+                                    })] })), _jsxs("button", { onClick: () => onNavigate('files'), onMouseEnter: () => setHoveredItem('files'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Files' : undefined, style: navItemStyle('files'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }) }) }), !collapsed && _jsx("span", { children: "Files" })] })] }), _jsxs("div", { style: { position: 'relative', zIndex: 2, borderTop: `1px solid ${GOLD}33` }, children: [hubMenuOpen && !collapsed && (_jsxs("div", { style: { background: 'rgba(0,0,0,0.28)', borderBottom: `1px solid ${GOLD}22` }, children: [_jsxs("button", { onClick: () => { openSettings('security'); setHubMenuOpen(false); }, onMouseEnter: () => setHoveredItem('settings-sub'), onMouseLeave: () => setHoveredItem(null), style: {
                                             display: 'flex', alignItems: 'center', gap: '0.85rem',
                                             padding: '0.75rem 1.1rem 0.75rem 1.6rem',
                                             background: hoveredItem === 'settings-sub' ? 'rgba(255,255,255,0.06)' : 'transparent',
@@ -314,7 +295,15 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                                             color: activeModule === 'apiassist' ? GOLD : 'rgba(255,255,255,0.75)',
                                             cursor: 'pointer', fontSize: '1rem', fontWeight: activeModule === 'apiassist' ? 700 : 400,
                                             width: '100%', textAlign: 'left', whiteSpace: 'nowrap', transition: 'background 0.15s',
-                                        }, children: [_jsx("span", { style: { display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" }) }) }), _jsx("span", { children: "API Assist" })] }), _jsxs("button", { onClick: () => { setHubMenuOpen(false); onLogout(); }, onMouseEnter: () => setHoveredItem('logout-sub'), onMouseLeave: () => setHoveredItem(null), style: {
+                                        }, children: [_jsx("span", { style: { display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" }) }) }), _jsx("span", { children: "API Assist" })] }), _jsxs("button", { onClick: () => { onNavigate('systems'); setHubMenuOpen(false); }, onMouseEnter: () => setHoveredItem('systems-sub'), onMouseLeave: () => setHoveredItem(null), style: {
+                                            display: 'flex', alignItems: 'center', gap: '0.85rem',
+                                            padding: '0.75rem 1.1rem 0.75rem 1.6rem',
+                                            background: activeModule === 'systems' ? 'rgba(201,168,64,0.14)' : hoveredItem === 'systems-sub' ? 'rgba(255,255,255,0.06)' : 'transparent',
+                                            border: 'none', borderLeft: activeModule === 'systems' ? `3px solid ${GOLD}` : '3px solid transparent',
+                                            color: activeModule === 'systems' ? GOLD : 'rgba(255,255,255,0.75)',
+                                            cursor: 'pointer', fontSize: '1rem', fontWeight: activeModule === 'systems' ? 700 : 400,
+                                            width: '100%', textAlign: 'left', whiteSpace: 'nowrap', transition: 'background 0.15s',
+                                        }, children: [_jsx("span", { style: { display: 'flex' }, children: _jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("rect", { x: "2", y: "3", width: "20", height: "6", rx: "1" }), _jsx("rect", { x: "2", y: "15", width: "20", height: "6", rx: "1" }), _jsx("line", { x1: "6", y1: "6", x2: "6.01", y2: "6" }), _jsx("line", { x1: "6", y1: "18", x2: "6.01", y2: "18" })] }) }), _jsx("span", { children: "Systems" })] }), _jsxs("button", { onClick: () => { setHubMenuOpen(false); onLogout(); }, onMouseEnter: () => setHoveredItem('logout-sub'), onMouseLeave: () => setHoveredItem(null), style: {
                                             display: 'flex', alignItems: 'center', gap: '0.85rem',
                                             padding: '0.75rem 1.1rem 0.75rem 1.6rem',
                                             background: hoveredItem === 'logout-sub' ? 'rgba(255,255,255,0.06)' : 'transparent',
