@@ -4,7 +4,7 @@ import ProfilePanel from '../components/hub/ProfilePanel';
 import Chat from '../modules/chat/Chat';
 import SettingsWindow, { type SettingsSection } from '../modules/settings/SettingsWindow';
 
-export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new';
+export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills';
 
 interface BrandData {
   displayName: string | null;
@@ -596,6 +596,22 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
               <span>+ New Project</span>
             </button>
           )}
+
+          {/* Skills */}
+          <button
+            onClick={() => onNavigate('skills')}
+            onMouseEnter={() => setHoveredItem('skills')}
+            onMouseLeave={() => setHoveredItem(null)}
+            title={collapsed ? 'Skills' : undefined}
+            style={navItemStyle('skills')}
+          >
+            <span style={{ flexShrink: 0, display: 'flex' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </span>
+            {!collapsed && <span>Skills</span>}
+          </button>
 
           {/* Files */}
           <button

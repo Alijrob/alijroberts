@@ -43,6 +43,7 @@ function ComingSoon({ module }: { module: HubModule }) {
     newspaper: 'Newspaper',
     projects: 'Projects',
     'project-new': 'New Project',
+    skills: 'Skills',
   };
   return (
     <div style={{ padding: '4rem 2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: '#888' }}>
@@ -56,7 +57,7 @@ export default function Hub({ brand, onBrandRefresh, onLogout }: Props) {
   const [activeModule, setActiveModule] = useState<HubModule>(() => {
     if (typeof window === 'undefined') return 'dashboard';
     const hash = window.location.hash.replace(/^#/, '');
-    const valid: ReadonlyArray<HubModule> = ['dashboard','agenda','crm','todo','calendar','email','files','operations','raven','daedalus','blueprint','newspaper','settings','apiassist','agent-bridges','systems','projects','project-new'];
+    const valid: ReadonlyArray<HubModule> = ['dashboard','agenda','crm','todo','calendar','email','files','operations','raven','daedalus','blueprint','newspaper','settings','apiassist','agent-bridges','systems','projects','project-new','skills'];
     return (valid as readonly string[]).includes(hash) ? (hash as HubModule) : 'dashboard';
   });
   const [collapsed, setCollapsed] = useState(false);
