@@ -4,7 +4,7 @@ import ProfilePanel from '../components/hub/ProfilePanel';
 import Chat from '../modules/chat/Chat';
 import SettingsWindow, { type SettingsSection } from '../modules/settings/SettingsWindow';
 
-export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems';
+export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new';
 
 interface BrandData {
   displayName: string | null;
@@ -119,6 +119,7 @@ const OPERATIONS_CHILDREN: { id: string; label: string; icon: React.ReactNode; h
 ];
 
 const OPERATIONS_IDS: HubModule[] = ['raven', 'newspaper'];
+const PROJECTS_IDS: HubModule[] = ['projects', 'project-new'];
 
 const SETTINGS_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -191,6 +192,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
   const [settingsSection, setSettingsSection] = useState<SettingsSection>('security');
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [operationsOpen, setOperationsOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
   const [userLinks, setUserLinks] = useState<Array<{ id: number; label: string; url: string; icon_key: string }>>([]);
   useEffect(() => {
     fetch('/api/sidebar-links').then(r => r.ok ? r.json() : []).then(setUserLinks).catch(() => setUserLinks([]));
@@ -218,6 +220,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
 
   const isDashboardActive = DASHBOARD_IDS.includes(activeModule);
   const isOperationsActive = OPERATIONS_IDS.includes(activeModule);
+  const isProjectsActive = PROJECTS_IDS.includes(activeModule);
 
   const textureLayers = (
     <>
@@ -541,6 +544,57 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                 );
               })}
             </>
+          )}
+
+          {/* Projects group (dropdown) */}
+          <button
+            onClick={() => collapsed ? onNavigate('projects') : setProjectsOpen(o => !o)}
+            onMouseEnter={() => setHoveredItem('projects-group')}
+            onMouseLeave={() => setHoveredItem(null)}
+            title={collapsed ? 'Projects' : undefined}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.85rem',
+              padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
+              justifyContent: collapsed ? 'center' : 'space-between',
+              background: isProjectsActive ? 'rgba(201,168,64,0.16)' : hoveredItem === 'projects-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
+              border: 'none',
+              borderLeft: isProjectsActive ? `3px solid ${GOLD}` : '3px solid transparent',
+              color: isProjectsActive ? GOLD : 'rgba(255,255,255,0.82)',
+              cursor: 'pointer', fontSize: '1rem', fontWeight: isProjectsActive ? 700 : 400,
+              width: '100%', textAlign: 'left', transition: 'background 0.15s, color 0.15s',
+              whiteSpace: 'nowrap', overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <span style={{ flexShrink: 0, display: 'flex' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                </svg>
+              </span>
+              {!collapsed && <span>Projects</span>}
+            </div>
+            {!collapsed && <span style={{ fontSize: '0.65rem', opacity: 0.5 }}>{projectsOpen ? '▲' : '▼'}</span>}
+          </button>
+
+          {projectsOpen && !collapsed && (
+            <button
+              onClick={() => onNavigate('project-new')}
+              onMouseEnter={() => setHoveredItem('proj-new')}
+              onMouseLeave={() => setHoveredItem(null)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.6rem',
+                padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                background: activeModule === 'project-new' ? 'rgba(201,168,64,0.14)' : hoveredItem === 'proj-new' ? 'rgba(255,255,255,0.05)' : 'transparent',
+                border: 'none',
+                borderLeft: activeModule === 'project-new' ? `3px solid ${GOLD}` : '3px solid transparent',
+                color: activeModule === 'project-new' ? GOLD : 'rgba(255,255,255,0.7)',
+                cursor: 'pointer', fontSize: '0.92rem', fontWeight: activeModule === 'project-new' ? 700 : 400,
+                width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                transition: 'background 0.15s, color 0.15s',
+              }}
+            >
+              <span>+ New Project</span>
+            </button>
           )}
 
           {/* Files */}
