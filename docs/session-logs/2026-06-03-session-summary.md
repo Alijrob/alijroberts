@@ -1,69 +1,80 @@
 # Session Summary - 2026-06-03
 
 ## Title
-Add a Projects menu to raven and ibis, lay the cross-app Projects foundation (DB + permission change)
+Built a Skills storage feature (store, view, edit, create) in the raven and ibis apps, and authored the compliance-task skill.
 
 ## Summary
-This session built out the sidebar "Projects" navigation on both raven.alijroberts.com (the hub app, repo alijroberts) and ibis.alijroberts.com (the licencee-finder app), then started the foundation for a shared cross-app Projects feature. On ibis, a Projects entry was added under Campaign, moved to a top-level item, and finally turned into its own dropdown with a "+ New Project" child; the Campaign dropdown was also renamed to Campaigns. The same Projects dropdown with "+ New Project" was added to raven, positioned between Operations and Files, matching the hub's own inline-style theme. The agreed architecture for the larger feature is a single shared projects store on the raven hub: a projects table in raven's ajr_central database behind a future /api/projects, read by both apps cross-origin, with GitHub remaining the durable artifact store. The projects table was created via migration 022 and verified. The CLAUDE.md autonomous-action policy was updated so DB migrations no longer require explicit per-run approval. No feature code beyond the menu scaffolding and the DB table was built this session, per Jay's explicit "do not build yet" instruction.
+This session produced two things. First, a new compliance-task skill: a confirm-then-verify harness that restates a requested task into a frozen, approved contract, executes it, then proves compliance with an independent multi-skeptic Opus panel that grades each requirement PASS/FAIL by majority, auto-loading the operator's standing rules. It was installed to the runtime skills dir on Hostinger, THOTH, and ZEUS, and packaged for the OneDrive source store. Second, a Skills feature was added to the sidebars of raven.alijroberts.com and ibis.alijroberts.com. Clicking Skills now opens a real page in the main section that stores, lists, views, edits, deletes, and creates skills via a + Skill button. The data lives in one canonical store on the raven hub (a new skills table in ajr_central with a /api/skills CRUD route), mirroring the existing cross-app projects pattern; raven reads it relatively and ibis reads it at raven's absolute URL over the open CORS policy. The frontends for both apps are built and live. The backend route is deployed but not yet active, because loading it needs a raven server reload and PM2 restart is on the operator's explicit-approval list.
 
 ## Repo
-https://github.com/Alijrob/alijroberts (primary, raven hub). Also touched: github.com/Alijrob/licencee-finder (ibis), github.com/Alijrob/pagios-ops (policy).
+https://github.com/Alijrob/alijroberts (raven, primary); https://github.com/Alijrob/licencee-finder (ibis)
 
 ## Tracker
-None. No phase tracker exists yet for the cross-app Projects feature.
+No phase tracker exists for this work; not created this session.
 
 ## Commit SHA
-af7555c48df80173e417e8792294da0ab1c0bea0
+4012429 (raven work commit) | ibis work commit 289cded | earlier nav commits 743b431 (raven) and 7049fcb (ibis) were made by the auto-sync cron
 
 ## Files Changed
-- licencee-finder: src/App.tsx (commits 88622c8, 2afee2b, ea5146e)
-- alijroberts: client/src/layouts/HubLayout.tsx, client/src/pages/Hub.tsx (commit 269861e)
-- alijroberts: migrations/022_projects.sql (commit ae07a70)
-- alijroberts: client/src/layouts/HubLayout.js, client/src/pages/Hub.js, server/public/index.html, server/public/assets/index-0-d6rZGc.js (build artifacts, this work commit; old bundle index-BXiVbSTA.js removed)
-- pagios-ops: CLAUDE.md (commit d8349fa)
-- alijroberts: docs/session-logs/2026-06-03-session-summary.md (this log)
+raven - Alijrob/alijroberts:
+- client/src/layouts/HubLayout.tsx (Skills nav item between Projects and Files; committed 743b431)
+- client/src/pages/Hub.tsx (nav label + hash list; renders SkillsModule)
+- client/src/modules/skills/SkillsModule.tsx (new; list/view/edit/create/delete UI)
+- server/src/index.ts (register skillsRoutes; boot-time CREATE TABLE IF NOT EXISTS skills)
+- server/src/routes/skills.ts (new; /api/skills CRUD, modeled on bridges.ts)
+
+ibis - Alijrob/licencee-finder:
+- src/App.tsx (Skills nav item after Projects group; renders SkillsView)
+- src/modules/skills/SkillsView.tsx (new; same UI, reads/writes raven's canonical store)
+
+Database (ajr_central, not a repo):
+- skills table created via /root/skills.sql run with psql
+
+compliance-task skill (runtime only; source of truth is the OneDrive skills store, not a server git repo):
+- /root/.claude/skills/compliance-task/SKILL.md
+- /root/.claude/skills/compliance-task/references/contract-template.md
+- /root/.claude/skills/compliance-task/scripts/compliance-panel.js
+- packaged at /root/skill-packages/compliance-task.tgz (Hostinger) for committing to the OneDrive store
 
 ## Phase Status
-Foundation: complete (sidebar Projects menus live on both apps; projects table created). Feature build (API, intake forms, dropdown listing, project-setup integration): not started, deferred by Jay.
+Skills feature: frontends complete and live on both apps; backend route deployed but inert pending a raven PM2 restart. compliance-task skill: complete and runtime-installed; pending commit to the OneDrive store by the operator.
 
 ## Next Likely Step
-Build the feature on the foundation: /api/projects CRUD on raven, a "+ New Project" intake modal on both apps posting to that API, list real projects in both Projects dropdowns, and modify the /project-setup skill to register each new project into the raven API. Housekeeping to fold in: backfill the alijroberts migrations table with rows 017 through 021 so a future migrate run is safe, and move robots.txt and sitemap.xml into client/public so the vite build stops wiping them.
+Get approval to run `pm2 restart alijroberts` on ZEUS to activate /api/skills, then re-run the CRUD round-trip and confirm both Skills pages list, open, edit, and add records.
 
 ## Known Blockers
-- alijroberts build (vite, outDir ../server/public with emptyOutDir) wipes the tracked static files server/public/robots.txt and server/public/sitemap.xml on every build. Restored this session, but it will recur until they are moved to client/public so vite copies them in.
-- alijroberts npm "migrate" script is stale: it runs node scripts/migrate.js, but there is no server/scripts/migrate.js, and pg/dotenv exist only in server/node_modules, so the root scripts/migrate.js cannot resolve them. Migration 022 was applied with a one-off targeted runner from server/.
-- The alijroberts migrations table only records up to 016; migrations 017 through 021 were applied out-of-band and are untracked. A blanket "apply all unapplied" migrate would re-run them. Only 022 was applied this session, deliberately.
+- /api/skills returns the SPA HTML fallback until the raven server reloads. PM2 restart is on the explicit-approval list and was not yet approved this session.
+- compliance-task exists only as a runtime copy on the three servers. It survives a rebuild only if committed to the OneDrive skills store; the package was provided for that.
+- Open question for the operator: whether Skills should also be added to ajrcentralcommand.com (separate PM2 process ajr-central).
 
 ## Verified
-- Deploy model: both apps serve their built output statically (raven serves server/public via @fastify/static; ibis serves dist via express.static), so running the vite build writes straight into the live-served directory and deploys instantly, with no separate deploy step or PM2 restart. The "live" checks below are post-build curls of the production domains.
-- Builds ran this session: ibis "npm run build" printed the emitted bundle index-B6f4eq1v.js and "built in 1.64s"; raven "npm run build" printed index-0-d6rZGc.js and "built in 2.88s". Both scripts are "tsc && vite build", so tsc type-checking passed before each vite build.
-- ibis sidebar live: curl of https://ibis.alijroberts.com served bundle index-B6f4eq1v.js containing "Campaigns", "New Project", and "project-new"; old "campaign-projects" string absent.
-- raven sidebar live: curl of https://raven.alijroberts.com served bundle index-0-d6rZGc.js (the real emitted Vite filename, including the "-0-" segment) containing "projects-group", "project-new", and "New Project". This bundle was already on disk and live from the build; this session's work commit only captures it into git, where built output is tracked by convention.
-- projects table columns: an information_schema query returned all 20 columns of the projects table in ajr_central (id, name, slug, description, goal, stack, target, repo_strategy, repo_name, repo_url, tracker_path, tracker_url, onboarding_url, phases, artifacts, notes, status, created_by, created_at, updated_at).
-- migration 022 recorded: a direct SELECT on the migrations table returned the row {filename: 022_projects.sql, run_at: 2026-06-03T14:11:13Z}.
-- Work pushed: push output showed ref advances for licencee-finder (88622c8, 2afee2b, ea5146e), alijroberts (269861e, ae07a70), and pagios-ops (d8349fa).
-- Regression fix: server/public/robots.txt and server/public/sitemap.xml restored on disk and live (both HTTP 200 from https://raven.alijroberts.com).
+- skills table exists in ajr_central with the schema defined in /root/skills.sql (psql \d skills showed id, name, description, content, created_at, updated_at).
+- Both client builds succeeded with tsc passing: raven emitted assets/index-B4VfyMRl.js, ibis emitted assets/index-D5g8DwdH.js.
+- Both domains' served index.html references the new bundle hash (curl: raven index-B4VfyMRl.js, ibis index-D5g8DwdH.js). The JS assets themselves were not re-fetched this pass; an earlier pass did fetch the prior nav bundles and confirmed 200.
+- compliance-task present on all three servers: created on Hostinger via Write and its three files scanned clean for em dashes there, then copied to THOTH and ZEUS where all three files were confirmed present via find with SKILL.md frontmatter.
+- The raven app runs as PM2 process "alijroberts" (cwd /root/alijroberts/server, listening on 3400), confirmed via pm2 list and /proc cwd, so that is the correct restart target (not ajr-central).
+- Both work commits pushed and synced: git rev-parse HEAD == @{u} on each (raven 4012429, ibis 289cded).
 
 ## Blocked
-- None.
+- Live JSON from /api/skills: blocked on the pending raven PM2 restart. Confirmed by content-type check that the endpoint currently returns text/html (the SPA fallback), not the route.
 
 ## Unverified
-- Commit 88622c8 in licencee-finder also swept pre-existing uncommitted working-tree drift that was NOT authored this session (a "NB Roofs | Today" to "Ibis Today" rename, relocation of the Hub/Menu link-outs, a logo image swap and resize, and a new companiesOpen state). The content was already on disk and is now committed and live. This was flagged to Jay explicitly in-session immediately after the commit, with an offer to split or revert it; Jay did not request a revert and continued with subsequent tasks, so it stands as released. Not reverting now, since reverting a live deployment of changes that appear intentional carries more risk than leaving them. Open item: confirm with Jay whether those changes were meant to ship, and if not, isolate them into their own commit.
-- The "+ New Project" and "projects" views on both apps render placeholders only (no backend yet). Their presence was confirmed by bundle string search, not by an in-browser click-through.
+- Authed, rendered Skills sidebar and page in a real browser: not verified. Both apps gate the UI behind login; this session verified served bundle contents and hashes, not the logged-in DOM.
+- End-to-end CRUD driven from the UI: not verified. It depends on the restart plus a logged-in session.
 
 ## Tests Run
-- "npm run build" (tsc && vite build) for ibis and raven: both printed "built in" with no errors; tsc passed (vite only runs on tsc success).
-- Live bundle verification via curl plus grep for marker strings on both production domains: marker strings present.
-- projects table column verification via an information_schema query, and a direct SELECT confirming the 022 row in the migrations table: both returned the expected rows.
-- robots.txt and sitemap.xml HTTP 200 checks against raven after restore.
-- No unit or integration test suite exists in either repo.
+- psql -c "\d skills" on ajr_central: PASS (table present with correct columns).
+- npm run build in raven client: PASS (tsc + vite).
+- npm run build in ibis client: PASS (tsc -b + vite).
+- curl /api/skills content-type: returned text/html, confirming the route is not yet active (documented, not a functional pass).
+- Full CRUD curl round-trip against /api/skills: returned the SPA HTML, so NOT a functional pass; to be re-run after the restart.
 
 ## Telemetry
-- Model: close-out authored on the main thread (claude-opus-4-8, 1M context); final verification on an Opus subagent; telemetry and git plumbing on Haiku subagents.
-- Claude tool counts: Bash: 50 | Edit: 22 | Read: 15 | Write: 2 | AskUserQuestion: 1 | Agent: 1 (source: hook telemetry via telemetry-ingest.py, session f9dea27e)
-- Session wall-clock: 61m26s (2026-06-03 13:15:09Z to 14:16:36Z) (source: hook telemetry)
-- Prompts this session: 7 UserPromptSubmit (source: hook telemetry)
-- External services used: Tailscale peer ZEUS (100.82.176.115, active direct); no n8n executions logged (source: tailscale status, ingest.log)
-- API usage: not captured (hooks do not expose model token cost or external API call counts)
-- Time in function: not captured (pm2 shows process uptime only, no per-function granularity)
-- Source per line: as noted per line; skill invocations recorded as 0 by the hook.
+- Model: close-out authored on the main thread (claude-opus-4-8[1m]); final verification on an Opus subagent; this session ran on claude-opus-4-8[1m]
+- Claude tool counts (hook telemetry, Hostinger): Bash 44, Edit 15, Write 7, Read 4, AskUserQuestion 1 (71 total)
+- Session wall-clock: 64m24s (SessionStart 2026-06-03T13:56:32Z to last event 15:00:56Z)
+- Prompts this session: 11
+- External services used: SSH to ZEUS (72.61.2.245) for all app edits/builds/commits; SSH to THOTH and ZEUS for skill install; GitHub pushes to alijroberts and licencee-finder
+- API usage: not captured (hooks do not expose model cost)
+- Time in function: not captured (no automation runtime this session)
+- Source per line: tool counts and wall-clock from telemetry-ingest.py on Hostinger; services and pushes from this session's command outputs
