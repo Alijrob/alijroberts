@@ -8,11 +8,18 @@ interface Skill {
   name: string;
   description: string;
   content?: string;
+  folder_id: number | null;
   updated_at: string;
+}
+
+interface Folder {
+  id: number;
+  name: string;
 }
 
 export default function SkillsModule() {
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [selected, setSelected] = useState<Skill | null>(null);
   const [view, setView] = useState<'read' | 'edit'>('read');
   const [editName, setEditName] = useState('');
@@ -21,6 +28,9 @@ export default function SkillsModule() {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolder, setNewFolder] = useState('');
+  const [collapsed, setCollapsed] = useState<Set<number | string>>(new Set());
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,9 +38,10 @@ export default function SkillsModule() {
 
   async function load() {
     try {
-      const r = await fetch('/api/skills');
-      if (!r.ok) throw new Error(String(r.status));
-      setSkills(await r.json());
+      const [sr, fr] = await Promise.all([fetch('/api/skills'), fetch('/api/skill-folders')]);
+      if (!sr.ok) throw new Error(String(sr.status));
+      setSkills(await sr.json());
+      setFolders(fr.ok ? await fr.json() : []);
       setError(null);
     } catch {
       setError('Could not load skills.');
@@ -77,8 +88,39 @@ export default function SkillsModule() {
     setSkills(prev => [...prev, s].sort((a, z) => a.name.localeCompare(z.name)));
     setNewName('');
     setCreating(false);
-    select(s);
     startEditFor(s);
+  }
+
+  async function createFolder() {
+    if (!newFolder.trim()) return;
+    const r = await fetch('/api/skill-folders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newFolder.trim() }),
+    });
+    const f = await r.json();
+    setFolders(prev => [...prev, f].sort((a, z) => a.name.localeCompare(z.name)));
+    setNewFolder('');
+    setCreatingFolder(false);
+  }
+
+  async function deleteFolder(id: number, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm('Delete this folder? Its skills stay and become ungrouped.')) return;
+    await fetch(`/api/skill-folders/${id}`, { method: 'DELETE' });
+    setFolders(fs => fs.filter(f => f.id !== id));
+    setSkills(ss => ss.map(s => s.folder_id === id ? { ...s, folder_id: null } : s));
+  }
+
+  async function moveToFolder(skill: Skill, folderId: number | null) {
+    const r = await fetch(`/api/skills/${skill.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder_id: folderId }),
+    });
+    const updated = await r.json();
+    setSkills(ss => ss.map(s => s.id === updated.id ? { ...s, folder_id: updated.folder_id } : s));
+    setSelected(sel => sel && sel.id === updated.id ? { ...sel, folder_id: updated.folder_id } : sel);
   }
 
   function startEditFor(s: Skill) {
@@ -96,6 +138,14 @@ export default function SkillsModule() {
     if (selected?.id === id) setSelected(null);
   }
 
+  function toggleCollapse(key: number | string) {
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
   function fmt(s: string) {
     return new Date(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   }
@@ -104,6 +154,45 @@ export default function SkillsModule() {
     width: '100%', boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: '5px',
     padding: '0.45rem 0.6rem', fontSize: '0.88rem', outline: 'none',
   };
+
+  function skillRow(s: Skill, indented: boolean) {
+    return (
+      <div
+        key={s.id}
+        onClick={() => select(s)}
+        onMouseEnter={() => setHoveredId(s.id)}
+        onMouseLeave={() => setHoveredId(null)}
+        style={{
+          padding: '0.55rem 1rem',
+          paddingLeft: indented ? '1.6rem' : '1rem',
+          background: selected?.id === s.id ? `${GOLD}14` : hoveredId === s.id ? '#f3f4f6' : 'transparent',
+          borderLeft: selected?.id === s.id ? `3px solid ${GOLD}` : '3px solid transparent',
+          cursor: 'pointer', transition: 'background 0.1s',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem',
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '0.86rem', fontWeight: selected?.id === s.id ? 600 : 400, color: selected?.id === s.id ? NAVY : '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {s.name}
+          </div>
+          {s.description && (
+            <div style={{ fontSize: '0.72rem', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.15rem' }}>{s.description}</div>
+          )}
+        </div>
+        {hoveredId === s.id && (
+          <button
+            onClick={e => deleteSkill(s.id, e)}
+            title="Delete"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: '0.8rem', padding: '0 2px', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}
+          >✕</button>
+        )}
+      </div>
+    );
+  }
+
+  const ungrouped = skills.filter(s => s.folder_id == null);
 
   return (
     <div style={{ display: 'flex', height: '100%', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -115,12 +204,36 @@ export default function SkillsModule() {
             <div style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888' }}>Skills</div>
             <div style={{ fontSize: '0.72rem', color: '#bbb', marginTop: '1px' }}>Stored, viewable, editable</div>
           </div>
-          <button
-            onClick={() => { setCreating(v => !v); setNewName(''); }}
-            title="New skill"
-            style={{ background: creating ? `${GOLD}22` : 'transparent', border: `1px solid ${creating ? GOLD : '#d1d5db'}`, borderRadius: '5px', padding: '0 0.55rem', height: '28px', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', color: creating ? GOLD : '#6b7280', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}
-          >+ Skill</button>
+          <div style={{ display: 'flex', gap: '0.35rem' }}>
+            <button
+              onClick={() => { setCreatingFolder(v => !v); setNewFolder(''); setCreating(false); }}
+              title="New folder"
+              style={{ background: creatingFolder ? `${NAVY}14` : 'transparent', border: `1px solid ${creatingFolder ? NAVY : '#d1d5db'}`, borderRadius: '5px', padding: '0 0.5rem', height: '28px', display: 'flex', alignItems: 'center', cursor: 'pointer', color: creatingFolder ? NAVY : '#6b7280', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+            >+ Folder</button>
+            <button
+              onClick={() => { setCreating(v => !v); setNewName(''); setCreatingFolder(false); }}
+              title="New skill"
+              style={{ background: creating ? `${GOLD}22` : 'transparent', border: `1px solid ${creating ? GOLD : '#d1d5db'}`, borderRadius: '5px', padding: '0 0.5rem', height: '28px', display: 'flex', alignItems: 'center', cursor: 'pointer', color: creating ? GOLD : '#6b7280', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+            >+ Skill</button>
+          </div>
         </div>
+
+        {creatingFolder && (
+          <div style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid #e5e7eb', background: '#fff' }}>
+            <input
+              autoFocus
+              value={newFolder}
+              onChange={e => setNewFolder(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') createFolder(); if (e.key === 'Escape') setCreatingFolder(false); }}
+              placeholder="Folder name…"
+              style={{ ...inputStyle, border: `1px solid ${NAVY}55` }}
+            />
+            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
+              <button onClick={createFolder} style={{ flex: 1, padding: '0.28rem', background: NAVY, color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.76rem', cursor: 'pointer', fontWeight: 600 }}>Create folder</button>
+              <button onClick={() => setCreatingFolder(false)} style={{ flex: 1, padding: '0.28rem', background: '#f3f4f6', color: '#555', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '0.76rem', cursor: 'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        )}
 
         {creating && (
           <div style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid #e5e7eb', background: '#fff' }}>
@@ -144,39 +257,39 @@ export default function SkillsModule() {
           {!error && skills.length === 0 && (
             <p style={{ fontSize: '0.8rem', color: '#aaa', padding: '1rem', textAlign: 'center', margin: 0 }}>No skills yet. Click + Skill.</p>
           )}
-          {skills.map(s => (
-            <div
-              key={s.id}
-              onClick={() => select(s)}
-              onMouseEnter={() => setHoveredId(s.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              style={{
-                padding: '0.7rem 1rem',
-                background: selected?.id === s.id ? `${GOLD}14` : hoveredId === s.id ? '#f3f4f6' : 'transparent',
-                borderLeft: selected?.id === s.id ? `3px solid ${GOLD}` : '3px solid transparent',
-                cursor: 'pointer', transition: 'background 0.1s',
-                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '0.88rem', fontWeight: selected?.id === s.id ? 600 : 400, color: selected?.id === s.id ? NAVY : '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {s.name}
+
+          {folders.map(f => {
+            const items = skills.filter(s => s.folder_id === f.id);
+            const open = !collapsed.has(f.id);
+            return (
+              <div key={f.id}>
+                <div
+                  onClick={() => toggleCollapse(f.id)}
+                  onMouseEnter={() => setHoveredId(-f.id - 1000)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 1rem', cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <span style={{ fontSize: '0.65rem', color: '#9ca3af', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.1s' }}>▶</span>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: NAVY, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                  <span style={{ fontSize: '0.7rem', color: '#bbb' }}>{items.length}</span>
+                  {hoveredId === -f.id - 1000 && (
+                    <button onClick={e => deleteFolder(f.id, e)} title="Delete folder" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: '0.75rem', padding: 0 }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}>✕</button>
+                  )}
                 </div>
-                {s.description && (
-                  <div style={{ fontSize: '0.72rem', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.15rem' }}>{s.description}</div>
+                {open && items.length === 0 && (
+                  <p style={{ fontSize: '0.72rem', color: '#c4c4c4', fontStyle: 'italic', margin: 0, padding: '0.15rem 1rem 0.4rem 1.6rem' }}>Empty</p>
                 )}
+                {open && items.map(s => skillRow(s, true))}
               </div>
-              {hoveredId === s.id && (
-                <button
-                  onClick={e => deleteSkill(s.id, e)}
-                  title="Delete"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontSize: '0.8rem', padding: '0 2px', flexShrink: 0 }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}
-                >✕</button>
-              )}
-            </div>
-          ))}
+            );
+          })}
+
+          {folders.length > 0 && ungrouped.length > 0 && (
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#aaa', padding: '0.5rem 1rem 0.25rem' }}>Ungrouped</div>
+          )}
+          {(folders.length > 0 ? ungrouped : skills).map(s => skillRow(s, false))}
         </div>
       </div>
 
@@ -193,17 +306,28 @@ export default function SkillsModule() {
 
         {selected && view === 'read' && (
           <>
-            <div style={{ padding: '0.9rem 1.25rem', borderBottom: '1px solid #e5e7eb', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-              <div>
+            <div style={{ padding: '0.9rem 1.25rem', borderBottom: '1px solid #e5e7eb', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: '1rem' }}>
+              <div style={{ minWidth: 0 }}>
                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: NAVY }}>{selected.name}</h2>
                 {selected.description && (
                   <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: '#6b7280' }}>{selected.description}</p>
                 )}
               </div>
-              <button
-                onClick={startEdit}
-                style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: '6px', padding: '0.38rem 0.9rem', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
-              >Edit</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
+                <select
+                  value={selected.folder_id ?? ''}
+                  onChange={e => moveToFolder(selected, e.target.value === '' ? null : Number(e.target.value))}
+                  title="Move to folder"
+                  style={{ border: '1px solid #d1d5db', borderRadius: '6px', padding: '0.35rem 0.5rem', fontSize: '0.8rem', color: '#374151', background: '#fff', cursor: 'pointer', maxWidth: '160px' }}
+                >
+                  <option value="">No folder</option>
+                  {folders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+                <button
+                  onClick={startEdit}
+                  style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: '6px', padding: '0.38rem 0.9rem', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}
+                >Edit</button>
+              </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem' }}>
               <pre style={{ margin: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.85rem', lineHeight: 1.7, color: '#1f2937', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

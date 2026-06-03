@@ -10,7 +10,7 @@ import CalendarModule from '../modules/calendar/CalendarModule';
 import TasksModule from '../modules/tasks/TasksModule';
 import Blueprint from '../modules/blueprint/Blueprint';
 import Systems from '../modules/systems/Systems';
-import ProjectsView from '../modules/projects/ProjectsView';
+import SkillsModule from '../modules/skills/SkillsModule';
 function ComingSoon({ module }) {
     const labels = {
         dashboard: 'Dashboard',
@@ -44,9 +44,9 @@ export default function Hub({ brand, onBrandRefresh, onLogout }) {
         return valid.includes(hash) ? hash : 'dashboard';
     });
     const [collapsed, setCollapsed] = useState(false);
-    return (_jsxs(HubLayout, { activeModule: activeModule, onNavigate: (m) => setActiveModule(m), collapsed: collapsed, onToggle: () => setCollapsed(c => !c), brand: brand, onProfileSaved: onBrandRefresh, onLogout: onLogout, onOpenApiAssist: () => setActiveModule('apiassist'), children: [activeModule === 'dashboard' && _jsx(Dashboard, { brand: brand }), activeModule === 'apiassist' && _jsx(ApiAssist, {}), activeModule === 'files' && _jsx(MediaFiles, {}), activeModule === 'agent-bridges' && _jsx(AgentBridges, {}), activeModule === 'email' && _jsx(EmailModule, {}), activeModule === 'calendar' && _jsx(CalendarModule, {}), activeModule === 'todo' && _jsx(TasksModule, {}), activeModule === 'blueprint' && _jsx(Blueprint, {}), activeModule === 'systems' && _jsx(Systems, {}), activeModule === 'projects' && _jsx(ProjectsView, {}), activeModule !== 'dashboard' && activeModule !== 'apiassist' &&
+    return (_jsxs(HubLayout, { activeModule: activeModule, onNavigate: (m) => setActiveModule(m), collapsed: collapsed, onToggle: () => setCollapsed(c => !c), brand: brand, onProfileSaved: onBrandRefresh, onLogout: onLogout, onOpenApiAssist: () => setActiveModule('apiassist'), children: [activeModule === 'dashboard' && _jsx(Dashboard, { brand: brand }), activeModule === 'apiassist' && _jsx(ApiAssist, {}), activeModule === 'files' && _jsx(MediaFiles, {}), activeModule === 'agent-bridges' && _jsx(AgentBridges, {}), activeModule === 'email' && _jsx(EmailModule, {}), activeModule === 'calendar' && _jsx(CalendarModule, {}), activeModule === 'todo' && _jsx(TasksModule, {}), activeModule === 'blueprint' && _jsx(Blueprint, {}), activeModule === 'systems' && _jsx(Systems, {}), activeModule === 'skills' && _jsx(SkillsModule, {}), activeModule !== 'dashboard' && activeModule !== 'apiassist' &&
                 activeModule !== 'files' && activeModule !== 'agent-bridges' && activeModule !== 'email' &&
                 activeModule !== 'calendar' && activeModule !== 'todo' &&
-                activeModule !== 'blueprint' && activeModule !== 'systems' && activeModule !== 'projects' &&
+                activeModule !== 'blueprint' && activeModule !== 'systems' && activeModule !== 'skills' &&
                 _jsx(ComingSoon, { module: activeModule })] }));
 }

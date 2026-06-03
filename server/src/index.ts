@@ -56,6 +56,12 @@ async function ensureChatTables() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS skill_folders (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    ALTER TABLE skills ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES skill_folders(id) ON DELETE SET NULL;
   `);
 }
 
