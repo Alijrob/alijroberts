@@ -160,7 +160,16 @@ const C = {
   faint: '#8a96a8',
   track: 'rgba(28,40,102,0.10)',
   code: '#f1f4f9',
+  shadow: '0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.07)',
+  shadowLg: '0 4px 12px rgba(16,24,40,0.08), 0 2px 4px rgba(16,24,40,0.05)',
   mono: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+};
+
+const CARD: React.CSSProperties = {
+  background: C.panel,
+  border: `1px solid ${C.border}`,
+  borderRadius: 10,
+  boxShadow: C.shadow,
 };
 
 function SectionLabel({ text }: { text: string }): React.JSX.Element {
@@ -233,8 +242,7 @@ function ViewOverview({ metrics, loading }: { metrics: Metrics | null; loading: 
   if (!metrics) return <CenterMsg text="No sessions yet — ingest a transcript to begin." />;
   const t = metrics.totals;
   const kpiStyle: React.CSSProperties = {
-    background: C.panel2, border: `1px solid ${C.border}`, borderRadius: 8,
-    padding: '16px 20px', flex: 1, minWidth: 120,
+    ...CARD, padding: '16px 20px', flex: 1, minWidth: 120,
   };
   const maxFail = Math.max(...metrics.byFailure.map(x => x.n), 1);
   const maxSev = Math.max(...metrics.bySeverity.map(x => x.n), 1);
@@ -266,20 +274,20 @@ function ViewOverview({ metrics, loading }: { metrics: Metrics | null; loading: 
           </div>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 12 }}>
-        <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 14 }}>
+        <div style={{ ...CARD, padding: 18 }}>
           <SectionLabel text="Failure Categories" />
           {metrics.byFailure.map(r => <HBar key={r.k} label={FAILURE_LABELS[r.k] ?? r.k} value={r.n} max={maxFail} color="#dc2626" />)}
         </div>
-        <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: 16 }}>
+        <div style={{ ...CARD, padding: 18 }}>
           <SectionLabel text="Severity Breakdown" />
           {metrics.bySeverity.map(r => <HBar key={r.k} label={r.k} value={r.n} max={maxSev} color={SEVERITY_COLORS[r.k as Severity] ?? C.gold} />)}
         </div>
-        <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: 16 }}>
+        <div style={{ ...CARD, padding: 18 }}>
           <SectionLabel text="User Sentiment" />
           {metrics.bySentiment.map(r => <HBar key={r.k} label={r.k} value={r.n} max={maxSent} />)}
         </div>
-        <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: 16 }}>
+        <div style={{ ...CARD, padding: 18 }}>
           <SectionLabel text="Top Behavioral Flags" />
           {metrics.byFlag.length === 0
             ? <span style={{ color: C.faint, fontSize: 13 }}>No flags recorded.</span>
@@ -358,15 +366,15 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
 
   const panelHead: React.CSSProperties = {
     background: C.accent,
-    padding: '6px 14px',
-    borderRadius: '6px 6px 0 0',
+    padding: '8px 14px',
+    borderRadius: '8px 8px 0 0',
     display: 'flex', alignItems: 'center', gap: 10,
     fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.onAccent,
   };
 
   const panelBody: React.CSSProperties = {
-    background: C.panel2, border: `1px solid ${C.border}`, borderTop: 'none',
-    borderRadius: '0 0 6px 6px', padding: '14px 16px', marginBottom: 12,
+    background: C.panel, border: `1px solid ${C.border}`, borderTop: 'none',
+    borderRadius: '0 0 8px 8px', padding: '14px 16px', marginBottom: 14, boxShadow: C.shadow,
   };
 
   const fieldRow = (label: string, value: string, mono = false): React.JSX.Element => (
@@ -381,7 +389,7 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
   return (
     <div style={{ padding: '14px 16px', overflowY: 'auto', flex: 1 }}>
       {/* Score strip */}
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', background: C.panel2, border: `1px solid ${C.border}`, borderRadius: 8, padding: '12px 16px', marginBottom: 14 }}>
+      <div style={{ ...CARD, display: 'flex', gap: 14, flexWrap: 'wrap', padding: '14px 16px', marginBottom: 16 }}>
         <ScoreBar label="Compliance" value={rec.compliance_score} />
         <ScoreBar label="Efficiency" value={rec.efficiency_score} />
         <ScoreBar label="Overeng." value={rec.overengineering_score} invert />
@@ -486,7 +494,7 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
       </div>
 
       {/* Annotation + Tags + Actions */}
-      <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: 14 }}>
+      <div style={{ ...CARD, padding: 16 }}>
         <SectionLabel text="Annotation" />
         <textarea
           value={annotation}
@@ -585,7 +593,7 @@ function ViewRecords({ sessionId }: { sessionId: number | null }): React.JSX.Ele
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       {/* Left: filters + list */}
-      <div style={{ width: 300, flexShrink: 0, borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: 300, flexShrink: 0, background: C.panel, borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}` }}>
           <SectionLabel text="Filters" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -786,7 +794,7 @@ function ViewTrends({ metrics }: { metrics: Metrics | null; loading: boolean }):
           const latest = vals[vals.length - 1] ?? 0;
           const color = scoreColor(latest, line.invert);
           return (
-            <div key={line.key} style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: '12px 16px' }}>
+            <div key={line.key} style={{ ...CARD, padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.muted, minWidth: 130 }}>{line.label}</span>
                 <span style={{ fontFamily: C.mono, fontSize: 16, color }}>{fmtScore(latest)}</span>
