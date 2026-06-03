@@ -23,6 +23,7 @@ import { emailRoutes } from './routes/email.js';
 import { calendarRoutes } from './routes/calendar.js';
 import { tasksRoutes } from './routes/tasks.js';
 import { projectsRoutes } from './routes/projects.js';
+import { skillsRoutes } from './routes/skills.js';
 import { db } from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -47,6 +48,14 @@ async function ensureChatTables() {
     );
     CREATE INDEX IF NOT EXISTS chat_messages_conv_idx ON chat_messages(conversation_id, created_at);
     CREATE INDEX IF NOT EXISTS chat_conversations_updated_idx ON chat_conversations(updated_at DESC);
+    CREATE TABLE IF NOT EXISTS skills (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 }
 
@@ -84,6 +93,7 @@ await app.register(emailRoutes);
 await app.register(calendarRoutes);
 await app.register(tasksRoutes);
 await app.register(projectsRoutes);
+await app.register(skillsRoutes);
 
 // SPA fallback — serve index.html for all non-API routes
 app.setNotFoundHandler((_req, reply) => {
