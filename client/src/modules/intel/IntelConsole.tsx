@@ -104,11 +104,11 @@ interface Metrics {
 // ─── Constants / Helpers ─────────────────────────────────────────────────────
 
 const SEVERITY_COLORS: Record<Severity, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#eab308',
-  low: '#3b82f6',
-  none: '#22c55e',
+  critical: '#dc2626',
+  high: '#ea580c',
+  medium: '#ca8a04',
+  low: '#2563eb',
+  none: '#16a34a',
 };
 
 const FAILURE_LABELS: Record<string, string> = {
@@ -126,15 +126,15 @@ const FAILURE_ORDER: FailureCategory[] = ['none', 'instruction-violation', 'inte
 
 function scoreColor(val: number, invert = false): string {
   if (invert) {
-    if (val <= 20) return '#22c55e';
-    if (val <= 40) return '#c9a840';
-    if (val <= 60) return '#f97316';
-    return '#ef4444';
+    if (val <= 20) return '#16a34a';
+    if (val <= 40) return '#9a7615';
+    if (val <= 60) return '#ea580c';
+    return '#dc2626';
   }
-  if (val >= 80) return '#22c55e';
-  if (val >= 60) return '#c9a840';
-  if (val >= 40) return '#f97316';
-  return '#ef4444';
+  if (val >= 80) return '#16a34a';
+  if (val >= 60) return '#9a7615';
+  if (val >= 40) return '#ea580c';
+  return '#dc2626';
 }
 
 function fmtFlag(f: string): string {
@@ -148,15 +148,18 @@ function fmtScore(n: number): string {
 // ─── Shared UI Primitives ────────────────────────────────────────────────────
 
 const C = {
-  bg: '#0b0f1a',
-  panel: '#121829',
-  panel2: '#0f1422',
-  border: 'rgba(255,255,255,0.08)',
+  bg: '#eef1f6',
+  panel: '#ffffff',
+  panel2: '#f7f9fc',
+  border: '#dbe1ea',
   accent: '#1c2866',
-  gold: '#c9a840',
-  text: 'rgba(255,255,255,0.92)',
-  muted: 'rgba(255,255,255,0.55)',
-  faint: 'rgba(255,255,255,0.35)',
+  onAccent: '#ffffff',
+  gold: '#9a7615',
+  text: '#1a2233',
+  muted: '#5a6678',
+  faint: '#8a96a8',
+  track: 'rgba(28,40,102,0.10)',
+  code: '#f1f4f9',
   mono: 'ui-monospace, SFMono-Regular, Menlo, monospace',
 };
 
@@ -187,7 +190,7 @@ function FailureChip({ val }: { val: string }): React.JSX.Element {
     <span style={{
       background: isNone ? '#22c55e22' : '#ef444422',
       border: `1px solid ${isNone ? '#22c55e55' : '#ef444455'}`,
-      color: isNone ? '#22c55e' : '#ef4444',
+      color: isNone ? '#16a34a' : '#dc2626',
       borderRadius: 4, padding: '2px 7px', fontSize: 11, fontWeight: 600,
     }}>
       {FAILURE_LABELS[val] ?? val}
@@ -203,7 +206,7 @@ function HBar({ label, value, max, color }: { label: string; value: number; max:
         <span>{label}</span>
         <span style={{ fontFamily: C.mono, color: C.text }}>{value}</span>
       </div>
-      <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+      <div style={{ height: 6, background: C.track, borderRadius: 3, overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${pct}%`, background: color ?? C.gold, borderRadius: 3, transition: 'width 0.3s' }} />
       </div>
     </div>
@@ -215,7 +218,7 @@ function ScoreBar({ label, value, invert = false }: { label: string; value: numb
   return (
     <div style={{ flex: 1, minWidth: 100 }}>
       <div style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.muted, marginBottom: 4 }}>{label}</div>
-      <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 4 }}>
+      <div style={{ height: 4, background: C.track, borderRadius: 2, marginBottom: 4 }}>
         <div style={{ height: '100%', width: `${value}%`, background: color, borderRadius: 2 }} />
       </div>
       <div style={{ fontFamily: C.mono, fontSize: 13, color }}>{fmtScore(value)}</div>
@@ -246,11 +249,11 @@ function ViewOverview({ metrics, loading }: { metrics: Metrics | null; loading: 
         </div>
         <div style={kpiStyle}>
           <SectionLabel text="Failures" />
-          <div style={{ fontFamily: C.mono, fontSize: 28, color: '#ef4444' }}>{t.failures}</div>
+          <div style={{ fontFamily: C.mono, fontSize: 28, color: '#dc2626' }}>{t.failures}</div>
         </div>
         <div style={kpiStyle}>
           <SectionLabel text="High / Critical" />
-          <div style={{ fontFamily: C.mono, fontSize: 28, color: '#f97316' }}>{t.high_severity}</div>
+          <div style={{ fontFamily: C.mono, fontSize: 28, color: '#ea580c' }}>{t.high_severity}</div>
         </div>
         <div style={{ ...kpiStyle, flex: 3, minWidth: 300 }}>
           <SectionLabel text="Score Averages" />
@@ -266,7 +269,7 @@ function ViewOverview({ metrics, loading }: { metrics: Metrics | null; loading: 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 12 }}>
         <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: 16 }}>
           <SectionLabel text="Failure Categories" />
-          {metrics.byFailure.map(r => <HBar key={r.k} label={FAILURE_LABELS[r.k] ?? r.k} value={r.n} max={maxFail} color="#ef4444" />)}
+          {metrics.byFailure.map(r => <HBar key={r.k} label={FAILURE_LABELS[r.k] ?? r.k} value={r.n} max={maxFail} color="#dc2626" />)}
         </div>
         <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, padding: 16 }}>
           <SectionLabel text="Severity Breakdown" />
@@ -358,7 +361,7 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
     padding: '6px 14px',
     borderRadius: '6px 6px 0 0',
     display: 'flex', alignItems: 'center', gap: 10,
-    fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.text,
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.onAccent,
   };
 
   const panelBody: React.CSSProperties = {
@@ -394,7 +397,7 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
         <div style={panelBody}>
           <div style={{ marginBottom: 10 }}>
             <SectionLabel text="Literal Instruction" />
-            <div style={{ fontFamily: C.mono, fontSize: 12, background: '#0b0f1a', border: `1px solid ${C.border}`, borderRadius: 4, padding: '8px 10px', whiteSpace: 'pre-wrap', color: C.text, maxHeight: 100, overflowY: 'auto' }}>
+            <div style={{ fontFamily: C.mono, fontSize: 12, background: C.code, border: `1px solid ${C.border}`, borderRadius: 4, padding: '8px 10px', whiteSpace: 'pre-wrap', color: C.text, maxHeight: 100, overflowY: 'auto' }}>
               {rec.literal_instruction || '—'}
             </div>
           </div>
@@ -414,7 +417,7 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
             <SectionLabel text="Actions Taken" />
             {rec.actions_taken && rec.actions_taken.length > 0 ? rec.actions_taken.map((a, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 5 }}>
-                <span style={{ background: '#1c2866', color: C.gold, fontFamily: C.mono, fontSize: 10, padding: '1px 6px', borderRadius: 3, flexShrink: 0, marginTop: 1 }}>{a.type}</span>
+                <span style={{ background: C.accent, color: C.onAccent, fontFamily: C.mono, fontSize: 10, padding: '1px 6px', borderRadius: 3, flexShrink: 0, marginTop: 1 }}>{a.type}</span>
                 <span style={{ fontSize: 12, color: C.muted }}>{a.detail}</span>
               </div>
             )) : <span style={{ color: C.faint, fontSize: 12 }}>No actions recorded.</span>}
@@ -422,7 +425,7 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
           <div style={{ display: 'flex', gap: 20 }}>
             <div><SectionLabel text="Tool Calls" /><span style={{ fontFamily: C.mono, color: C.text }}>{rec.tool_usage_count}</span></div>
             <div><SectionLabel text="Verifications" /><span style={{ fontFamily: C.mono, color: C.text }}>{rec.verification_count}</span></div>
-            <div><SectionLabel text="Redundant" /><span style={{ fontFamily: C.mono, color: rec.redundant_action_count > 0 ? '#f97316' : C.text }}>{rec.redundant_action_count}</span></div>
+            <div><SectionLabel text="Redundant" /><span style={{ fontFamily: C.mono, color: rec.redundant_action_count > 0 ? '#ea580c' : C.text }}>{rec.redundant_action_count}</span></div>
           </div>
         </div>
       </div>
@@ -436,10 +439,10 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
           <div style={{ display: 'flex', gap: 20, marginBottom: 10 }}>
             <div><SectionLabel text="Exec Time" /><span style={{ fontFamily: C.mono, fontSize: 12, color: C.text }}>{rec.execution_time || '—'}</span></div>
             <div><SectionLabel text="Context State" /><span style={{ fontFamily: C.mono, fontSize: 12, color: C.text }}>{rec.context_window_state || '—'}</span></div>
-            <div><SectionLabel text="Error Type" /><span style={{ fontFamily: C.mono, fontSize: 12, color: rec.error_type ? '#f97316' : C.faint }}>{rec.error_type || 'none'}</span></div>
+            <div><SectionLabel text="Error Type" /><span style={{ fontFamily: C.mono, fontSize: 12, color: rec.error_type ? '#ea580c' : C.faint }}>{rec.error_type || 'none'}</span></div>
           </div>
           <SectionLabel text="Raw Chunk" />
-          <div style={{ fontFamily: C.mono, fontSize: 11, background: '#0b0f1a', border: `1px solid ${C.border}`, borderRadius: 4, padding: '8px 10px', whiteSpace: 'pre-wrap', color: C.muted, maxHeight: 120, overflowY: 'auto' }}>
+          <div style={{ fontFamily: C.mono, fontSize: 11, background: C.code, border: `1px solid ${C.border}`, borderRadius: 4, padding: '8px 10px', whiteSpace: 'pre-wrap', color: C.muted, maxHeight: 120, overflowY: 'auto' }}>
             {rec.raw_chunk || '—'}
           </div>
         </div>
@@ -501,7 +504,7 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
           <button onClick={() => { void save(); }} disabled={saving} style={btnStyle(C.gold, saving)}>
             {saving ? 'Saving...' : 'Save Annotation'}
           </button>
-          <button onClick={() => { void doDelete(); }} disabled={deleting} style={btnStyle('#ef4444', deleting)}>
+          <button onClick={() => { void doDelete(); }} disabled={deleting} style={btnStyle('#dc2626', deleting)}>
             {deleting ? 'Deleting...' : 'Delete Record'}
           </button>
         </div>
@@ -512,8 +515,8 @@ function DetailPanel({ rec, onUpdate, onDelete }: {
 
 function btnStyle(color: string, disabled: boolean): React.CSSProperties {
   return {
-    background: disabled ? 'rgba(255,255,255,0.05)' : `${color}22`,
-    border: `1px solid ${disabled ? 'rgba(255,255,255,0.1)' : color + '66'}`,
+    background: disabled ? 'rgba(0,0,0,0.04)' : `${color}1f`,
+    border: `1px solid ${disabled ? C.border : color + '66'}`,
     color: disabled ? C.muted : color,
     borderRadius: 5, padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer',
   };
@@ -696,8 +699,8 @@ function ViewHeatmap({ sessionId }: { sessionId: number | null }): React.JSX.Ele
               {SEVERITY_ORDER.map(s => {
                 const count = grid[f]?.[s] ?? 0;
                 const intensity = maxVal > 0 ? count / maxVal : 0;
-                const bg = count === 0 ? 'transparent' : `rgba(201,168,64,${0.1 + intensity * 0.7})`;
-                const textColor = intensity > 0.5 ? '#fff' : count > 0 ? C.gold : C.faint;
+                const bg = count === 0 ? 'transparent' : `rgba(28,40,102,${0.12 + intensity * 0.78})`;
+                const textColor = intensity > 0.45 ? '#fff' : count > 0 ? C.accent : C.faint;
                 return (
                   <td key={s} style={{ textAlign: 'center', padding: 4 }}>
                     <div style={{ width: cellSize - 8, height: 40, background: bg, borderRadius: 4, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: C.mono, fontSize: 14, color: textColor }}>
@@ -749,7 +752,7 @@ const TREND_LINES: TrendLine[] = [
 ];
 
 function Sparkline({ data, color, w, h }: { data: number[]; color: string; w: number; h: number }): React.JSX.Element {
-  if (data.length < 2) return <svg width={w} height={h}><text x={4} y={h / 2 + 4} fill="rgba(255,255,255,0.3)" fontSize={11}>Not enough data</text></svg>;
+  if (data.length < 2) return <svg width={w} height={h}><text x={4} y={h / 2 + 4} fill="#8a96a8" fontSize={11}>Not enough data</text></svg>;
   const pts = data.map((v, i) => {
     const x = (i / (data.length - 1)) * (w - 20) + 10;
     const y = h - 8 - ((v / 100) * (h - 16));
@@ -871,8 +874,8 @@ function ViewIngest({ onIngested }: { onIngested: () => void }): React.JSX.Eleme
       <div style={{ fontSize: 11, color: C.faint, marginBottom: 16, lineHeight: 1.6 }}>
         Accepted formats: Mark speaker turns with "User:" / "Assistant:" (also Human:/Claude:/Jay:/Agent:, or markdown ## User / **User**). Unmarked transcripts are stored as a single unit.
       </div>
-      {error && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 10 }}>{error}</div>}
-      {result && <div style={{ color: '#22c55e', fontSize: 13, marginBottom: 10, background: '#22c55e11', border: '1px solid #22c55e33', borderRadius: 4, padding: '8px 12px' }}>{result}</div>}
+      {error && <div style={{ color: '#dc2626', fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {result && <div style={{ color: '#16a34a', fontSize: 13, marginBottom: 10, background: '#16a34a14', border: '1px solid #16a34a44', borderRadius: 4, padding: '8px 12px' }}>{result}</div>}
       <button onClick={() => { void ingest(); }} disabled={loading} style={btnStyle(C.gold, loading)}>
         {loading ? 'Analyzing...' : 'Ingest & Analyze'}
       </button>
@@ -910,7 +913,7 @@ function ViewExport({ sessionId, sessions }: { sessionId: number | null; session
           Export Current Session
           {session ? ` — ${session.label}` : ''}
         </button>
-        <button onClick={() => download(false)} style={btnStyle('#22c55e', false)}>
+        <button onClick={() => download(false)} style={btnStyle('#16a34a', false)}>
           Export All Sessions
         </button>
       </div>
@@ -996,7 +999,7 @@ export default function IntelConsole(): React.JSX.Element {
   return (
     <div style={{ height: '100%', background: C.bg, color: C.text, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Top Bar */}
-      <div style={{ borderBottom: `1px solid ${C.border}`, padding: '12px 20px 0', flexShrink: 0 }}>
+      <div style={{ background: C.panel, borderBottom: `1px solid ${C.border}`, padding: '12px 20px 0', flexShrink: 0, boxShadow: '0 1px 3px rgba(28,40,102,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.text }}>
