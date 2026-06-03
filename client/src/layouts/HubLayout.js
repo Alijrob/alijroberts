@@ -53,6 +53,7 @@ const OPERATIONS_CHILDREN = [
     },
 ];
 const OPERATIONS_IDS = ['raven', 'newspaper'];
+const PROJECTS_IDS = ['projects', 'project-new'];
 const SETTINGS_ICON = (_jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("circle", { cx: "12", cy: "12", r: "3" }), _jsx("path", { d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" })] }));
 function useClock() {
     const [now, setNow] = useState(new Date());
@@ -117,6 +118,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
     const [settingsSection, setSettingsSection] = useState('security');
     const [dashboardOpen, setDashboardOpen] = useState(false);
     const [operationsOpen, setOperationsOpen] = useState(false);
+    const [projectsOpen, setProjectsOpen] = useState(false);
     const [userLinks, setUserLinks] = useState([]);
     useEffect(() => {
         fetch('/api/sidebar-links').then(r => r.ok ? r.json() : []).then(setUserLinks).catch(() => setUserLinks([]));
@@ -140,6 +142,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
     const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     const isDashboardActive = DASHBOARD_IDS.includes(activeModule);
     const isOperationsActive = OPERATIONS_IDS.includes(activeModule);
+    const isProjectsActive = PROJECTS_IDS.includes(activeModule);
     const textureLayers = (_jsxs(_Fragment, { children: [_jsx("div", { style: { position: 'absolute', inset: 0, backgroundImage: "url('/uploads/raven.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 } }), _jsx("div", { style: { position: 'absolute', inset: 0, background: 'rgba(8,12,35,0.96)', zIndex: 1 } })] }));
     const navItemStyle = (id) => {
         const isActive = activeModule === id;
@@ -273,7 +276,28 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                                                 transition: 'background 0.15s, color 0.15s',
                                                 textDecoration: 'none',
                                             }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: renderSidebarIcon(link.icon_key) }), _jsx("span", { children: link.label })] }, `user-${link.id}`));
-                                    })] })), _jsxs("button", { onClick: () => onNavigate('files'), onMouseEnter: () => setHoveredItem('files'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Files' : undefined, style: navItemStyle('files'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }) }) }), !collapsed && _jsx("span", { children: "Files" })] })] }), _jsxs("div", { style: { position: 'relative', zIndex: 2, borderTop: `1px solid ${GOLD}33` }, children: [hubMenuOpen && !collapsed && (_jsxs("div", { style: { background: 'rgba(0,0,0,0.28)', borderBottom: `1px solid ${GOLD}22` }, children: [_jsxs("button", { onClick: () => { openSettings('security'); setHubMenuOpen(false); }, onMouseEnter: () => setHoveredItem('settings-sub'), onMouseLeave: () => setHoveredItem(null), style: {
+                                    })] })), _jsxs("button", { onClick: () => collapsed ? onNavigate('projects') : setProjectsOpen(o => !o), onMouseEnter: () => setHoveredItem('projects-group'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Projects' : undefined, style: {
+                                    display: 'flex', alignItems: 'center', gap: '0.85rem',
+                                    padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
+                                    justifyContent: collapsed ? 'center' : 'space-between',
+                                    background: isProjectsActive ? 'rgba(201,168,64,0.16)' : hoveredItem === 'projects-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
+                                    border: 'none',
+                                    borderLeft: isProjectsActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                                    color: isProjectsActive ? GOLD : 'rgba(255,255,255,0.82)',
+                                    cursor: 'pointer', fontSize: '1rem', fontWeight: isProjectsActive ? 700 : 400,
+                                    width: '100%', textAlign: 'left', transition: 'background 0.15s, color 0.15s',
+                                    whiteSpace: 'nowrap', overflow: 'hidden',
+                                }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: '0.85rem' }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }) }) }), !collapsed && _jsx("span", { children: "Projects" })] }), !collapsed && _jsx("span", { style: { fontSize: '0.65rem', opacity: 0.5 }, children: projectsOpen ? '▲' : '▼' })] }), projectsOpen && !collapsed && (_jsx("button", { onClick: () => onNavigate('project-new'), onMouseEnter: () => setHoveredItem('proj-new'), onMouseLeave: () => setHoveredItem(null), style: {
+                                    display: 'flex', alignItems: 'center', gap: '0.6rem',
+                                    padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                                    background: activeModule === 'project-new' ? 'rgba(201,168,64,0.14)' : hoveredItem === 'proj-new' ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                    border: 'none',
+                                    borderLeft: activeModule === 'project-new' ? `3px solid ${GOLD}` : '3px solid transparent',
+                                    color: activeModule === 'project-new' ? GOLD : 'rgba(255,255,255,0.7)',
+                                    cursor: 'pointer', fontSize: '0.92rem', fontWeight: activeModule === 'project-new' ? 700 : 400,
+                                    width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                                    transition: 'background 0.15s, color 0.15s',
+                                }, children: _jsx("span", { children: "+ New Project" }) })), _jsxs("button", { onClick: () => onNavigate('files'), onMouseEnter: () => setHoveredItem('files'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Files' : undefined, style: navItemStyle('files'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }) }) }), !collapsed && _jsx("span", { children: "Files" })] })] }), _jsxs("div", { style: { position: 'relative', zIndex: 2, borderTop: `1px solid ${GOLD}33` }, children: [hubMenuOpen && !collapsed && (_jsxs("div", { style: { background: 'rgba(0,0,0,0.28)', borderBottom: `1px solid ${GOLD}22` }, children: [_jsxs("button", { onClick: () => { openSettings('security'); setHubMenuOpen(false); }, onMouseEnter: () => setHoveredItem('settings-sub'), onMouseLeave: () => setHoveredItem(null), style: {
                                             display: 'flex', alignItems: 'center', gap: '0.85rem',
                                             padding: '0.75rem 1.1rem 0.75rem 1.6rem',
                                             background: hoveredItem === 'settings-sub' ? 'rgba(255,255,255,0.06)' : 'transparent',
