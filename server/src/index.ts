@@ -22,6 +22,7 @@ import { bridgesRoutes } from './routes/bridges.js';
 import { emailRoutes } from './routes/email.js';
 import { calendarRoutes } from './routes/calendar.js';
 import { tasksRoutes } from './routes/tasks.js';
+import { projectsRoutes } from './routes/projects.js';
 import { db } from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -82,6 +83,7 @@ await app.register(bridgesRoutes);
 await app.register(emailRoutes);
 await app.register(calendarRoutes);
 await app.register(tasksRoutes);
+await app.register(projectsRoutes);
 
 // SPA fallback — serve index.html for all non-API routes
 app.setNotFoundHandler((_req, reply) => {
