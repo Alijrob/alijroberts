@@ -10,6 +10,7 @@ import TasksModule from '../modules/tasks/TasksModule';
 import Blueprint from '../modules/blueprint/Blueprint';
 import Systems from '../modules/systems/Systems';
 import SkillsModule from '../modules/skills/SkillsModule';
+import ProjectsView from '../modules/projects/ProjectsView';
 
 interface BrandData {
   displayName: string | null;
@@ -84,10 +85,12 @@ export default function Hub({ brand, onBrandRefresh, onLogout }: Props) {
       {activeModule === 'blueprint'      && <Blueprint />}
       {activeModule === 'systems'        && <Systems />}
       {activeModule === 'skills'         && <SkillsModule />}
+      {(activeModule === 'projects' || activeModule === 'project-new') && <ProjectsView />}
       {activeModule !== 'dashboard' && activeModule !== 'apiassist' &&
        activeModule !== 'files' && activeModule !== 'agent-bridges' && activeModule !== 'email' &&
        activeModule !== 'calendar' && activeModule !== 'todo' &&
        activeModule !== 'blueprint' && activeModule !== 'systems' && activeModule !== 'skills' &&
+       activeModule !== 'projects' && activeModule !== 'project-new' &&
        <ComingSoon module={activeModule} />}
     </HubLayout>
   );
