@@ -5,7 +5,7 @@ import Chat from '../modules/chat/Chat';
 import SettingsWindow, { type SettingsSection } from '../modules/settings/SettingsWindow';
 import ProjectIntakeModal from '../modules/projects/ProjectIntakeModal';
 
-export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills' | 'prompt-library' | 'prompt-lab' | 'prompt-fixes';
+export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills' | 'prompt-library' | 'prompt-lab' | 'prompt-fixes' | 'prompt-intel';
 
 interface BrandData {
   displayName: string | null;
@@ -153,9 +153,20 @@ const PROMPT_CENTER_CHILDREN: { id: HubModule; label: string; icon: React.ReactN
       </svg>
     ),
   },
+  {
+    id: 'prompt-intel',
+    label: 'Intel',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18" />
+        <path d="M7 14l3-4 3 3 4-6" />
+        <circle cx="20" cy="7" r="1.4" />
+      </svg>
+    ),
+  },
 ];
 
-const PROMPT_CENTER_IDS: HubModule[] = ['prompt-library', 'prompt-lab', 'prompt-fixes'];
+const PROMPT_CENTER_IDS: HubModule[] = ['prompt-library', 'prompt-lab', 'prompt-fixes', 'prompt-intel'];
 
 const SETTINGS_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

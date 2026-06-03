@@ -12,6 +12,7 @@ import Systems from '../modules/systems/Systems';
 import SkillsModule from '../modules/skills/SkillsModule';
 import ProjectsView from '../modules/projects/ProjectsView';
 import PromptCenter from '../modules/prompts/PromptCenter';
+import IntelConsole from '../modules/intel/IntelConsole';
 
 interface BrandData {
   displayName: string | null;
@@ -50,6 +51,7 @@ function ComingSoon({ module }: { module: HubModule }) {
     'prompt-library': 'Prompt Library',
     'prompt-lab': 'Prompt Lab',
     'prompt-fixes': 'Prompt Fixes',
+    'prompt-intel': 'Operational Intelligence',
   };
   return (
     <div style={{ padding: '4rem 2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: '#888' }}>
@@ -63,7 +65,7 @@ export default function Hub({ brand, onBrandRefresh, onLogout }: Props) {
   const [activeModule, setActiveModule] = useState<HubModule>(() => {
     if (typeof window === 'undefined') return 'dashboard';
     const hash = window.location.hash.replace(/^#/, '');
-    const valid: ReadonlyArray<HubModule> = ['dashboard','agenda','crm','todo','calendar','email','files','operations','raven','daedalus','blueprint','newspaper','settings','apiassist','agent-bridges','systems','projects','project-new','skills','prompt-library','prompt-lab','prompt-fixes'];
+    const valid: ReadonlyArray<HubModule> = ['dashboard','agenda','crm','todo','calendar','email','files','operations','raven','daedalus','blueprint','newspaper','settings','apiassist','agent-bridges','systems','projects','project-new','skills','prompt-library','prompt-lab','prompt-fixes','prompt-intel'];
     return (valid as readonly string[]).includes(hash) ? (hash as HubModule) : 'dashboard';
   });
   const [collapsed, setCollapsed] = useState(false);
@@ -93,12 +95,14 @@ export default function Hub({ brand, onBrandRefresh, onLogout }: Props) {
       {activeModule === 'prompt-library' && <PromptCenter bucket="library" />}
       {activeModule === 'prompt-lab'     && <PromptCenter bucket="lab" />}
       {activeModule === 'prompt-fixes'   && <PromptCenter bucket="fixes" />}
+      {activeModule === 'prompt-intel'   && <IntelConsole />}
       {activeModule !== 'dashboard' && activeModule !== 'apiassist' &&
        activeModule !== 'files' && activeModule !== 'agent-bridges' && activeModule !== 'email' &&
        activeModule !== 'calendar' && activeModule !== 'todo' &&
        activeModule !== 'blueprint' && activeModule !== 'systems' && activeModule !== 'skills' &&
        activeModule !== 'projects' && activeModule !== 'project-new' &&
        activeModule !== 'prompt-library' && activeModule !== 'prompt-lab' && activeModule !== 'prompt-fixes' &&
+       activeModule !== 'prompt-intel' &&
        <ComingSoon module={activeModule} />}
     </HubLayout>
   );

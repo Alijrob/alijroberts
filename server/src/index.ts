@@ -25,6 +25,7 @@ import { tasksRoutes } from './routes/tasks.js';
 import { projectsRoutes } from './routes/projects.js';
 import { skillsRoutes } from './routes/skills.js';
 import { promptsRoutes } from './routes/prompts.js';
+import { intelRoutes } from './routes/intel.js';
 import { db } from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -121,6 +122,7 @@ await app.register(tasksRoutes);
 await app.register(projectsRoutes);
 await app.register(skillsRoutes);
 await app.register(promptsRoutes);
+await app.register(intelRoutes);
 
 // SPA fallback — serve index.html for all non-API routes
 app.setNotFoundHandler((_req, reply) => {
