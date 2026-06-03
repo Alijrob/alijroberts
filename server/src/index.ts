@@ -24,6 +24,7 @@ import { calendarRoutes } from './routes/calendar.js';
 import { tasksRoutes } from './routes/tasks.js';
 import { projectsRoutes } from './routes/projects.js';
 import { skillsRoutes } from './routes/skills.js';
+import { promptsRoutes } from './routes/prompts.js';
 import { db } from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -62,6 +63,25 @@ async function ensureChatTables() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE skills ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES skill_folders(id) ON DELETE SET NULL;
+    CREATE TABLE IF NOT EXISTS prompt_folders (
+      id SERIAL PRIMARY KEY,
+      bucket TEXT NOT NULL DEFAULT 'library',
+      name TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS prompts (
+      id SERIAL PRIMARY KEY,
+      bucket TEXT NOT NULL DEFAULT 'library',
+      name TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'active',
+      trigger TEXT NOT NULL DEFAULT '',
+      folder_id INTEGER REFERENCES prompt_folders(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS prompts_bucket_name_idx ON prompts(bucket, name);
   `);
 }
 
@@ -100,6 +120,7 @@ await app.register(calendarRoutes);
 await app.register(tasksRoutes);
 await app.register(projectsRoutes);
 await app.register(skillsRoutes);
+await app.register(promptsRoutes);
 
 // SPA fallback — serve index.html for all non-API routes
 app.setNotFoundHandler((_req, reply) => {

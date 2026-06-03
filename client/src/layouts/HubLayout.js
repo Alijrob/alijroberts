@@ -55,6 +55,24 @@ const OPERATIONS_CHILDREN = [
 ];
 const OPERATIONS_IDS = ['raven', 'newspaper'];
 const PROJECTS_IDS = ['projects', 'project-new'];
+const PROMPT_CENTER_CHILDREN = [
+    {
+        id: 'prompt-library',
+        label: 'Library',
+        icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" }), _jsx("path", { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" })] })),
+    },
+    {
+        id: 'prompt-lab',
+        label: 'Lab',
+        icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M10 2v7.31" }), _jsx("path", { d: "M14 9.3V1.99" }), _jsx("path", { d: "M8.5 2h7" }), _jsx("path", { d: "M14 9.3a6.5 6.5 0 1 1-4 0" }), _jsx("path", { d: "M5.58 16.5h12.85" })] })),
+    },
+    {
+        id: 'prompt-fixes',
+        label: 'Fixes',
+        icon: (_jsx("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" }) })),
+    },
+];
+const PROMPT_CENTER_IDS = ['prompt-library', 'prompt-lab', 'prompt-fixes'];
 const SETTINGS_ICON = (_jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("circle", { cx: "12", cy: "12", r: "3" }), _jsx("path", { d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" })] }));
 function useClock() {
     const [now, setNow] = useState(new Date());
@@ -120,6 +138,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
     const [dashboardOpen, setDashboardOpen] = useState(false);
     const [operationsOpen, setOperationsOpen] = useState(false);
     const [projectsOpen, setProjectsOpen] = useState(false);
+    const [promptCenterOpen, setPromptCenterOpen] = useState(false);
     const [projectModalOpen, setProjectModalOpen] = useState(false);
     const [projects, setProjects] = useState([]);
     const fetchProjects = () => fetch('/api/projects').then(r => r.ok ? r.json() : []).then(setProjects).catch(() => { });
@@ -148,6 +167,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
     const isDashboardActive = DASHBOARD_IDS.includes(activeModule);
     const isOperationsActive = OPERATIONS_IDS.includes(activeModule);
     const isProjectsActive = PROJECTS_IDS.includes(activeModule);
+    const isPromptCenterActive = PROMPT_CENTER_IDS.includes(activeModule);
     const textureLayers = (_jsxs(_Fragment, { children: [_jsx("div", { style: { position: 'absolute', inset: 0, backgroundImage: "url('/uploads/raven.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 } }), _jsx("div", { style: { position: 'absolute', inset: 0, background: 'rgba(8,12,35,0.96)', zIndex: 1 } })] }));
     const navItemStyle = (id) => {
         const isActive = activeModule === id;
@@ -313,7 +333,32 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                                                 width: '100%', textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                                 transition: 'background 0.15s, color 0.15s',
                                             }, children: _jsx("span", { style: { overflow: 'hidden', textOverflow: 'ellipsis' }, children: p.name }) }, p.id));
-                                    })] })), _jsxs("button", { onClick: () => onNavigate('skills'), onMouseEnter: () => setHoveredItem('skills'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Skills' : undefined, style: navItemStyle('skills'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" }) }) }), !collapsed && _jsx("span", { children: "Skills" })] }), _jsxs("button", { onClick: () => onNavigate('files'), onMouseEnter: () => setHoveredItem('files'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Files' : undefined, style: navItemStyle('files'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }) }) }), !collapsed && _jsx("span", { children: "Files" })] })] }), _jsxs("div", { style: { position: 'relative', zIndex: 2, borderTop: `1px solid ${GOLD}33` }, children: [hubMenuOpen && !collapsed && (_jsxs("div", { style: { background: 'rgba(0,0,0,0.28)', borderBottom: `1px solid ${GOLD}22` }, children: [_jsxs("button", { onClick: () => { openSettings('security'); setHubMenuOpen(false); }, onMouseEnter: () => setHoveredItem('settings-sub'), onMouseLeave: () => setHoveredItem(null), style: {
+                                    })] })), _jsxs("button", { onClick: () => onNavigate('skills'), onMouseEnter: () => setHoveredItem('skills'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Skills' : undefined, style: navItemStyle('skills'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" }) }) }), !collapsed && _jsx("span", { children: "Skills" })] }), _jsxs("button", { onClick: () => collapsed ? onNavigate('prompt-library') : setPromptCenterOpen(o => !o), onMouseEnter: () => setHoveredItem('prompt-center-group'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Prompt Center' : undefined, style: {
+                                    display: 'flex', alignItems: 'center', gap: '0.85rem',
+                                    padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
+                                    justifyContent: collapsed ? 'center' : 'space-between',
+                                    background: isPromptCenterActive ? 'rgba(201,168,64,0.16)' : hoveredItem === 'prompt-center-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
+                                    border: 'none',
+                                    borderLeft: isPromptCenterActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                                    color: isPromptCenterActive ? GOLD : 'rgba(255,255,255,0.82)',
+                                    cursor: 'pointer', fontSize: '1rem', fontWeight: isPromptCenterActive ? 700 : 400,
+                                    width: '100%', textAlign: 'left', transition: 'background 0.15s, color 0.15s',
+                                    whiteSpace: 'nowrap', overflow: 'hidden',
+                                }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: '0.85rem' }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }), _jsx("line", { x1: "8", y1: "9", x2: "16", y2: "9" }), _jsx("line", { x1: "8", y1: "13", x2: "13", y2: "13" })] }) }), !collapsed && _jsx("span", { children: "Prompt Center" })] }), !collapsed && _jsx("span", { style: { fontSize: '0.65rem', opacity: 0.5 }, children: promptCenterOpen ? '▲' : '▼' })] }), promptCenterOpen && !collapsed && (_jsx(_Fragment, { children: PROMPT_CENTER_CHILDREN.map(item => {
+                                    const isActive = activeModule === item.id;
+                                    const isHov = hoveredItem === `prompt-${item.id}`;
+                                    return (_jsxs("button", { onClick: () => onNavigate(item.id), onMouseEnter: () => setHoveredItem(`prompt-${item.id}`), onMouseLeave: () => setHoveredItem(null), style: {
+                                            display: 'flex', alignItems: 'center', gap: '0.6rem',
+                                            padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                                            background: isActive ? 'rgba(201,168,64,0.14)' : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                            border: 'none',
+                                            borderLeft: isActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                                            color: isActive ? GOLD : 'rgba(255,255,255,0.7)',
+                                            cursor: 'pointer', fontSize: '0.92rem', fontWeight: isActive ? 700 : 400,
+                                            width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                                            transition: 'background 0.15s, color 0.15s',
+                                        }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: item.icon }), _jsx("span", { children: item.label })] }, item.id));
+                                }) })), _jsxs("button", { onClick: () => onNavigate('files'), onMouseEnter: () => setHoveredItem('files'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Files' : undefined, style: navItemStyle('files'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }) }) }), !collapsed && _jsx("span", { children: "Files" })] })] }), _jsxs("div", { style: { position: 'relative', zIndex: 2, borderTop: `1px solid ${GOLD}33` }, children: [hubMenuOpen && !collapsed && (_jsxs("div", { style: { background: 'rgba(0,0,0,0.28)', borderBottom: `1px solid ${GOLD}22` }, children: [_jsxs("button", { onClick: () => { openSettings('security'); setHubMenuOpen(false); }, onMouseEnter: () => setHoveredItem('settings-sub'), onMouseLeave: () => setHoveredItem(null), style: {
                                             display: 'flex', alignItems: 'center', gap: '0.85rem',
                                             padding: '0.75rem 1.1rem 0.75rem 1.6rem',
                                             background: hoveredItem === 'settings-sub' ? 'rgba(255,255,255,0.06)' : 'transparent',

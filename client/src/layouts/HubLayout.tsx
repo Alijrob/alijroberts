@@ -5,7 +5,7 @@ import Chat from '../modules/chat/Chat';
 import SettingsWindow, { type SettingsSection } from '../modules/settings/SettingsWindow';
 import ProjectIntakeModal from '../modules/projects/ProjectIntakeModal';
 
-export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills';
+export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills' | 'prompt-library' | 'prompt-lab' | 'prompt-fixes';
 
 interface BrandData {
   displayName: string | null;
@@ -122,6 +122,41 @@ const OPERATIONS_CHILDREN: { id: string; label: string; icon: React.ReactNode; h
 const OPERATIONS_IDS: HubModule[] = ['raven', 'newspaper'];
 const PROJECTS_IDS: HubModule[] = ['projects', 'project-new'];
 
+const PROMPT_CENTER_CHILDREN: { id: HubModule; label: string; icon: React.ReactNode }[] = [
+  {
+    id: 'prompt-library',
+    label: 'Library',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'prompt-lab',
+    label: 'Lab',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 2v7.31" /><path d="M14 9.3V1.99" />
+        <path d="M8.5 2h7" /><path d="M14 9.3a6.5 6.5 0 1 1-4 0" />
+        <path d="M5.58 16.5h12.85" />
+      </svg>
+    ),
+  },
+  {
+    id: 'prompt-fixes',
+    label: 'Fixes',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+      </svg>
+    ),
+  },
+];
+
+const PROMPT_CENTER_IDS: HubModule[] = ['prompt-library', 'prompt-lab', 'prompt-fixes'];
+
 const SETTINGS_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" />
@@ -194,6 +229,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [operationsOpen, setOperationsOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [promptCenterOpen, setPromptCenterOpen] = useState(false);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [projects, setProjects] = useState<Array<{ id: number; name: string; status: string }>>([]);
   const fetchProjects = () => fetch('/api/projects').then(r => r.ok ? r.json() : []).then(setProjects).catch(() => {});
@@ -226,6 +262,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
   const isDashboardActive = DASHBOARD_IDS.includes(activeModule);
   const isOperationsActive = OPERATIONS_IDS.includes(activeModule);
   const isProjectsActive = PROJECTS_IDS.includes(activeModule);
+  const isPromptCenterActive = PROMPT_CENTER_IDS.includes(activeModule);
 
   const textureLayers = (
     <>
@@ -642,6 +679,68 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
             </span>
             {!collapsed && <span>Skills</span>}
           </button>
+
+          {/* Prompt Center group (dropdown) */}
+          <button
+            onClick={() => collapsed ? onNavigate('prompt-library') : setPromptCenterOpen(o => !o)}
+            onMouseEnter={() => setHoveredItem('prompt-center-group')}
+            onMouseLeave={() => setHoveredItem(null)}
+            title={collapsed ? 'Prompt Center' : undefined}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.85rem',
+              padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
+              justifyContent: collapsed ? 'center' : 'space-between',
+              background: isPromptCenterActive ? 'rgba(201,168,64,0.16)' : hoveredItem === 'prompt-center-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
+              border: 'none',
+              borderLeft: isPromptCenterActive ? `3px solid ${GOLD}` : '3px solid transparent',
+              color: isPromptCenterActive ? GOLD : 'rgba(255,255,255,0.82)',
+              cursor: 'pointer', fontSize: '1rem', fontWeight: isPromptCenterActive ? 700 : 400,
+              width: '100%', textAlign: 'left', transition: 'background 0.15s, color 0.15s',
+              whiteSpace: 'nowrap', overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <span style={{ flexShrink: 0, display: 'flex' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="13" x2="13" y2="13" />
+                </svg>
+              </span>
+              {!collapsed && <span>Prompt Center</span>}
+            </div>
+            {!collapsed && <span style={{ fontSize: '0.65rem', opacity: 0.5 }}>{promptCenterOpen ? '▲' : '▼'}</span>}
+          </button>
+
+          {promptCenterOpen && !collapsed && (
+            <>
+              {PROMPT_CENTER_CHILDREN.map(item => {
+                const isActive = activeModule === item.id;
+                const isHov = hoveredItem === `prompt-${item.id}`;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onNavigate(item.id)}
+                    onMouseEnter={() => setHoveredItem(`prompt-${item.id}`)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.6rem',
+                      padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                      background: isActive ? 'rgba(201,168,64,0.14)' : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                      border: 'none',
+                      borderLeft: isActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                      color: isActive ? GOLD : 'rgba(255,255,255,0.7)',
+                      cursor: 'pointer', fontSize: '0.92rem', fontWeight: isActive ? 700 : 400,
+                      width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                      transition: 'background 0.15s, color 0.15s',
+                    }}
+                  >
+                    <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </>
+          )}
 
           {/* Files */}
           <button
