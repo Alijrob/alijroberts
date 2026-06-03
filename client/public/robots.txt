@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Allow: /blueprint/
+Allow: /daedalus/
+Disallow: /api/
+
+Sitemap: https://alijroberts.com/sitemap.xml

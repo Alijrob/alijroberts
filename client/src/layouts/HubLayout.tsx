@@ -3,6 +3,7 @@ import { renderSidebarIcon } from '../modules/systems/sidebarIcons';
 import ProfilePanel from '../components/hub/ProfilePanel';
 import Chat from '../modules/chat/Chat';
 import SettingsWindow, { type SettingsSection } from '../modules/settings/SettingsWindow';
+import ProjectIntakeModal from '../modules/projects/ProjectIntakeModal';
 
 export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills';
 
@@ -193,6 +194,10 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [operationsOpen, setOperationsOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [projects, setProjects] = useState<Array<{ id: number; name: string; status: string }>>([]);
+  const fetchProjects = () => fetch('/api/projects').then(r => r.ok ? r.json() : []).then(setProjects).catch(() => {});
+  useEffect(() => { void fetchProjects(); }, []);
   const [userLinks, setUserLinks] = useState<Array<{ id: number; label: string; url: string; icon_key: string }>>([]);
   useEffect(() => {
     fetch('/api/sidebar-links').then(r => r.ok ? r.json() : []).then(setUserLinks).catch(() => setUserLinks([]));
@@ -577,24 +582,49 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
           </button>
 
           {projectsOpen && !collapsed && (
-            <button
-              onClick={() => onNavigate('project-new')}
-              onMouseEnter={() => setHoveredItem('proj-new')}
-              onMouseLeave={() => setHoveredItem(null)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.6rem',
-                padding: '0.65rem 1.1rem 0.65rem 2.2rem',
-                background: activeModule === 'project-new' ? 'rgba(201,168,64,0.14)' : hoveredItem === 'proj-new' ? 'rgba(255,255,255,0.05)' : 'transparent',
-                border: 'none',
-                borderLeft: activeModule === 'project-new' ? `3px solid ${GOLD}` : '3px solid transparent',
-                color: activeModule === 'project-new' ? GOLD : 'rgba(255,255,255,0.7)',
-                cursor: 'pointer', fontSize: '0.92rem', fontWeight: activeModule === 'project-new' ? 700 : 400,
-                width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
-                transition: 'background 0.15s, color 0.15s',
-              }}
-            >
-              <span>+ New Project</span>
-            </button>
+            <>
+              <button
+                onClick={() => setProjectModalOpen(true)}
+                onMouseEnter={() => setHoveredItem('proj-new')}
+                onMouseLeave={() => setHoveredItem(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.6rem',
+                  padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                  background: hoveredItem === 'proj-new' ? 'rgba(255,255,255,0.05)' : 'transparent',
+                  border: 'none', borderLeft: '3px solid transparent',
+                  color: 'rgba(255,255,255,0.7)',
+                  cursor: 'pointer', fontSize: '0.92rem', fontWeight: 400,
+                  width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+              >
+                <span>+ New Project</span>
+              </button>
+              {projects.map(p => {
+                const isHov = hoveredItem === `proj-${p.id}`;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => onNavigate('projects')}
+                    onMouseEnter={() => setHoveredItem(`proj-${p.id}`)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    title={p.name}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.6rem',
+                      padding: '0.55rem 1.1rem 0.55rem 2.2rem',
+                      background: isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                      border: 'none', borderLeft: '3px solid transparent',
+                      color: 'rgba(255,255,255,0.7)',
+                      cursor: 'pointer', fontSize: '0.88rem', fontWeight: 400,
+                      width: '100%', textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      transition: 'background 0.15s, color 0.15s',
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                  </button>
+                );
+              })}
+            </>
           )}
 
           {/* Skills */}
@@ -806,6 +836,13 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
 
       {settingsOpen && (
         <SettingsWindow section={settingsSection} onChangeSection={setSettingsSection} onClose={() => setSettingsOpen(false)} onLogout={onLogout} />
+      )}
+
+      {projectModalOpen && (
+        <ProjectIntakeModal
+          onClose={() => setProjectModalOpen(false)}
+          onCreated={() => { setProjectModalOpen(false); void fetchProjects(); onNavigate('projects'); }}
+        />
       )}
 
     </div>
