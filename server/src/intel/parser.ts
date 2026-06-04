@@ -314,7 +314,101 @@ function blocks(transcript: string): Block[] {
   return out;
 }
 
-export function parseTranscript(transcript: string, seq = 1): IntelRecord[] {
+// ---- /wtf structured parse path -------------------------------------------
+// A /wtf turn is already structured: the skill emits exactly five labelled
+// sections (see the wtf skill). Those sections map one-to-one onto IntelRecord
+// fields, so we bypass the heuristic guesser and read them directly. The
+// generic detector still runs underneath to produce scores/flags; we then
+// overwrite the structured fields with the exact section text.
+const WTF_SECTIONS: { key: string; re: RegExp }[] = [
+  { key: 'lastCommand', re: /your\s+last\s+command/i },
+  { key: 'whatIDid',    re: /what\s+i\s+did/i },
+  { key: 'whyWrong',    re: /why\s+it'?s?\s+wrong/i },
+  { key: 'whoseFault',  re: /whose\s+fault/i },
+  { key: 'shouldveSaid',re: /what\s+you\s+should'?ve\s+said/i },
+];
+
+// A header line looks like "### 1. Your last command", "**Whose fault**", "4. Why it's wrong:" etc.
+function wtfHeaderKey(line: string): string | null {
+  const stripped = line.replace(/^[#>\s]*/, '').replace(/[*_`]/g, '').replace(/^\d+[.)]\s*/, '').trim();
+  if (!stripped || stripped.length > 60) return null;
+  for (const s of WTF_SECTIONS) if (s.re.test(stripped)) return s.key;
+  return null;
+}
+
+function parseWtf(transcript: string, seq: number): IntelRecord[] | null {
+  const lines = transcript.replace(/\r\n/g, '\n').split('\n');
+  const sections: Record<string, string[]> = {};
+  let cur: string | null = null;
+  for (const line of lines) {
+    const key = wtfHeaderKey(line);
+    if (key) { cur = key; sections[cur] = sections[cur] || []; continue; }
+    if (cur) sections[cur].push(line);
+  }
+  const found = Object.keys(sections).filter(k => sections[k].join('').trim());
+  // Require at least 3 of the 5 canonical sections to treat this as a real /wtf output.
+  if (found.length < 3) return null;
+
+  const get = (k: string) => (sections[k] || []).join('\n').trim();
+  const lastCommand  = get('lastCommand');
+  const whatIDid     = get('whatIDid');
+  const whyWrong     = get('whyWrong');
+  const whoseFault   = get('whoseFault');
+  const shouldveSaid = get('shouldveSaid');
+
+  // Base record: feed the analysis sections in as "feedback" so the existing
+  // detectors fire the right frustration/correction/violation signals.
+  const base = detect(lastCommand || '(no command captured)', whatIDid, `${whyWrong}\n${whoseFault}`, seq, 0);
+
+  // Fault verdict drives whether this counts as our miss vs an ambiguous prompt.
+  const faultMine  = /\bmine\b/i.test(whoseFault.split('\n')[0] || whoseFault);
+  const faultYours = /\byours\b/i.test(whoseFault.split('\n')[0] || whoseFault) && !faultMine;
+
+  // Map the five sections straight onto record fields.
+  base.literal_instruction = lastCommand || base.literal_instruction;
+  base.user_intent = firstSentence(lastCommand) || base.user_intent;
+  base.parsed_intent = firstSentence(lastCommand) || '(no command captured in /wtf)';
+  base.agent_interpretation = firstSentence(whatIDid) || base.agent_interpretation;
+  base.deviation = whyWrong || base.deviation;
+  base.root_cause = whoseFault || base.root_cause;
+  base.preferred_alternative_action = shouldveSaid || base.preferred_alternative_action;
+  base.ideal_execution = shouldveSaid || base.ideal_execution;
+
+  // failure_category from the "why it's wrong" content + fault verdict.
+  if (faultYours) {
+    base.failure_category = base.failure_category === 'none' ? 'intent-misalignment' : base.failure_category;
+  } else if (/\b(rule|told you|supposed to|instruction|standing rule|asked you|you were asked)\b/i.test(whyWrong + whoseFault)) {
+    base.failure_category = 'instruction-violation';
+  } else if (/\b(added|extra|scope|also (built|created|wrote)|beyond what)\b/i.test(whyWrong)) {
+    base.failure_category = 'overengineering';
+  } else if (base.failure_category === 'none') {
+    base.failure_category = 'intent-misalignment';
+  }
+
+  if (base.severity_rating === 'none') base.severity_rating = 'medium';
+  base.outcome_quality = 'poor';
+  base.user_sentiment = 'frustrated';
+  base.error_type = base.error_type === 'none' ? 'logic' : base.error_type;
+
+  base.flags = Array.from(new Set([...base.flags, 'wtf_correction', 'failure_to_prioritize_user_intent']));
+  base.categories = Array.from(new Set([
+    ...base.categories,
+    'User Frustration Signals', 'Suggested Corrective Behavior', 'Rule/Principle Extraction',
+  ]));
+  base.command_id = `WTF-${String(seq).padStart(2, '0')}-001`;
+  base.raw_chunk = transcript.slice(0, 8000);
+
+  return [base];
+}
+
+export function parseTranscript(transcript: string, seq = 1, source = 'paste'): IntelRecord[] {
+  // /wtf events arrive already structured; parse them by their five sections.
+  if (source === 'wtf') {
+    const wtf = parseWtf(transcript, seq);
+    if (wtf) return wtf;
+    // fall through to heuristic parse if the sections weren't recognizable
+  }
+
   const bl = blocks(transcript);
 
   // No speaker markers detected: store as one unstructured unit so nothing is lost.

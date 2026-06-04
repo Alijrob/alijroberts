@@ -52,11 +52,16 @@ export async function ensureIntelTables() {
       raw_chunk TEXT NOT NULL DEFAULT '',
       annotation TEXT NOT NULL DEFAULT '',
       tags JSONB NOT NULL DEFAULT '[]',
+      source TEXT NOT NULL DEFAULT 'paste',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    -- carry the ingest source onto each record so correction events (source=wtf)
+    -- can be filtered on their own; ADD COLUMN keeps pre-existing tables in sync.
+    ALTER TABLE intel_records ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'paste';
     CREATE INDEX IF NOT EXISTS intel_records_session_idx ON intel_records(session_id, seq);
     CREATE INDEX IF NOT EXISTS intel_records_failure_idx ON intel_records(failure_category);
     CREATE INDEX IF NOT EXISTS intel_records_severity_idx ON intel_records(severity_rating);
+    CREATE INDEX IF NOT EXISTS intel_records_source_idx ON intel_records(source);
   `);
 }
 
@@ -64,7 +69,7 @@ const LIST_COLS = `id, session_id, seq, command_id, parsed_intent, agent_interpr
   failure_category, severity_rating, outcome_quality, user_sentiment, error_type,
   tool_usage_count, verification_count, redundant_action_count,
   compliance_score, efficiency_score, overengineering_score, autonomy_score, confidence_score,
-  categories, flags, annotation, tags, created_at`;
+  categories, flags, annotation, tags, source, created_at`;
 
 export async function intelRoutes(app: FastifyInstance) {
   await ensureIntelTables();
@@ -79,7 +84,7 @@ export async function intelRoutes(app: FastifyInstance) {
       [label?.trim() || 'Untitled session', source?.trim() || 'paste', transcript]
     );
     const session = sess[0];
-    const records = parseTranscript(transcript, session.id);
+    const records = parseTranscript(transcript, session.id, session.source);
 
     for (const r of records) {
       await db.query(
@@ -88,13 +93,13 @@ export async function intelRoutes(app: FastifyInstance) {
           actions_taken, tool_usage_count, verification_count, redundant_action_count, execution_time, context_window_state,
           error_type, failure_category, severity_rating, root_cause, corrective_action, preferred_alternative_action,
           outcome_quality, user_sentiment, compliance_score, efficiency_score, overengineering_score, autonomy_score,
-          confidence_score, deviation, ideal_execution, categories, flags, raw_chunk)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`,
+          confidence_score, deviation, ideal_execution, categories, flags, raw_chunk, source)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32)`,
         [session.id, r.seq, r.command_id, r.literal_instruction, r.user_intent, r.parsed_intent, r.agent_interpretation,
          JSON.stringify(r.actions_taken), r.tool_usage_count, r.verification_count, r.redundant_action_count, r.execution_time, r.context_window_state,
          r.error_type, r.failure_category, r.severity_rating, r.root_cause, r.corrective_action, r.preferred_alternative_action,
          r.outcome_quality, r.user_sentiment, r.compliance_score, r.efficiency_score, r.overengineering_score, r.autonomy_score,
-         r.confidence_score, r.deviation, r.ideal_execution, JSON.stringify(r.categories), JSON.stringify(r.flags), r.raw_chunk]
+         r.confidence_score, r.deviation, r.ideal_execution, JSON.stringify(r.categories), JSON.stringify(r.flags), r.raw_chunk, session.source]
       );
     }
     return { session, count: records.length };
@@ -128,6 +133,7 @@ export async function intelRoutes(app: FastifyInstance) {
     if (q.failure)    where.push(`failure_category = ${p(q.failure)}`);
     if (q.severity)   where.push(`severity_rating = ${p(q.severity)}`);
     if (q.sentiment)  where.push(`user_sentiment = ${p(q.sentiment)}`);
+    if (q.source)     where.push(`source = ${p(q.source)}`);
     if (q.flag)       where.push(`flags @> ${p(JSON.stringify([q.flag]))}::jsonb`);
     if (q.q) {
       const like = p(`%${q.q}%`);

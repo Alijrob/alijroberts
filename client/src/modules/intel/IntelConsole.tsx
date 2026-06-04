@@ -47,6 +47,7 @@ interface RecordSummary {
   flags: string[];
   annotation: string;
   tags: string[];
+  source: string;
   created_at: string;
 }
 
@@ -313,6 +314,9 @@ function RecordListRow({ rec, selected, onClick }: { rec: RecordSummary; selecte
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <span style={{ fontFamily: C.mono, fontSize: 12, color: C.gold }}>{rec.command_id}</span>
         <SeverityChip val={rec.severity_rating} />
+        {rec.source === 'wtf' && (
+          <span style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 700, color: C.onAccent, background: '#7c3aed', borderRadius: 3, padding: '1px 5px', letterSpacing: 0.5 }}>WTF</span>
+        )}
         {rec.failure_category !== 'none' && <FailureChip val={rec.failure_category} />}
         <span style={{ marginLeft: 'auto', fontFamily: C.mono, fontSize: 12, color: scoreColor(rec.compliance_score) }}>{fmtScore(rec.compliance_score)}</span>
       </div>
@@ -539,6 +543,7 @@ function ViewRecords({ sessionId }: { sessionId: number | null }): React.JSX.Ele
   const [failure, setFailure] = useState('');
   const [severity, setSeverity] = useState('');
   const [sentiment, setSentiment] = useState('');
+  const [source, setSource] = useState('');
   const [flag, setFlag] = useState('');
   const [q, setQ] = useState('');
 
@@ -550,6 +555,7 @@ function ViewRecords({ sessionId }: { sessionId: number | null }): React.JSX.Ele
       if (failure) params.set('failure', failure);
       if (severity) params.set('severity', severity);
       if (sentiment) params.set('sentiment', sentiment);
+      if (source) params.set('source', source);
       if (flag) params.set('flag', flag);
       if (q) params.set('q', q);
       const res = await fetch(`/api/intel/records?${params.toString()}`);
@@ -558,7 +564,7 @@ function ViewRecords({ sessionId }: { sessionId: number | null }): React.JSX.Ele
     } finally {
       setLoading(false);
     }
-  }, [sessionId, failure, severity, sentiment, flag, q]);
+  }, [sessionId, failure, severity, sentiment, source, flag, q]);
 
   useEffect(() => { void fetchRecords(); }, [fetchRecords]);
 
@@ -608,6 +614,12 @@ function ViewRecords({ sessionId }: { sessionId: number | null }): React.JSX.Ele
             <select value={sentiment} onChange={e => setSentiment(e.target.value)} style={selStyle}>
               <option value="">All Sentiments</option>
               {['positive','neutral','negative','frustrated'].map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select value={source} onChange={e => setSource(e.target.value)} style={selStyle}>
+              <option value="">All Sources</option>
+              <option value="wtf">/wtf corrections</option>
+              <option value="paste">Pasted</option>
+              <option value="upload">Uploaded</option>
             </select>
             <input value={flag} onChange={e => setFlag(e.target.value)} placeholder="Flag (exact)" style={selStyle} />
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search text..." style={selStyle} />

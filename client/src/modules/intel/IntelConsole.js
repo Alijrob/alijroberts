@@ -119,7 +119,7 @@ function RecordListRow({ rec, selected, onClick }) {
             padding: '10px 12px', cursor: 'pointer', borderBottom: `1px solid ${C.border}`,
             background: selected ? '#1c286640' : 'transparent',
             borderLeft: selected ? `3px solid ${C.gold}` : '3px solid transparent',
-        }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }, children: [_jsx("span", { style: { fontFamily: C.mono, fontSize: 12, color: C.gold }, children: rec.command_id }), _jsx(SeverityChip, { val: rec.severity_rating }), rec.failure_category !== 'none' && _jsx(FailureChip, { val: rec.failure_category }), _jsx("span", { style: { marginLeft: 'auto', fontFamily: C.mono, fontSize: 12, color: scoreColor(rec.compliance_score) }, children: fmtScore(rec.compliance_score) })] }), _jsx("div", { style: { fontSize: 12, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }, children: rec.parsed_intent || '—' })] }));
+        }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }, children: [_jsx("span", { style: { fontFamily: C.mono, fontSize: 12, color: C.gold }, children: rec.command_id }), _jsx(SeverityChip, { val: rec.severity_rating }), rec.source === 'wtf' && (_jsx("span", { style: { fontFamily: C.mono, fontSize: 10, fontWeight: 700, color: C.onAccent, background: '#7c3aed', borderRadius: 3, padding: '1px 5px', letterSpacing: 0.5 }, children: "WTF" })), rec.failure_category !== 'none' && _jsx(FailureChip, { val: rec.failure_category }), _jsx("span", { style: { marginLeft: 'auto', fontFamily: C.mono, fontSize: 12, color: scoreColor(rec.compliance_score) }, children: fmtScore(rec.compliance_score) })] }), _jsx("div", { style: { fontSize: 12, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }, children: rec.parsed_intent || '—' })] }));
 }
 function DetailPanel({ rec, onUpdate, onDelete }) {
     const [annotation, setAnnotation] = useState(rec.annotation ?? '');
@@ -190,6 +190,7 @@ function ViewRecords({ sessionId }) {
     const [failure, setFailure] = useState('');
     const [severity, setSeverity] = useState('');
     const [sentiment, setSentiment] = useState('');
+    const [source, setSource] = useState('');
     const [flag, setFlag] = useState('');
     const [q, setQ] = useState('');
     const fetchRecords = useCallback(async () => {
@@ -204,6 +205,8 @@ function ViewRecords({ sessionId }) {
                 params.set('severity', severity);
             if (sentiment)
                 params.set('sentiment', sentiment);
+            if (source)
+                params.set('source', source);
             if (flag)
                 params.set('flag', flag);
             if (q)
@@ -215,7 +218,7 @@ function ViewRecords({ sessionId }) {
         finally {
             setLoading(false);
         }
-    }, [sessionId, failure, severity, sentiment, flag, q]);
+    }, [sessionId, failure, severity, sentiment, source, flag, q]);
     useEffect(() => { void fetchRecords(); }, [fetchRecords]);
     async function loadDetail(id) {
         setSelectedId(id);
@@ -242,7 +245,7 @@ function ViewRecords({ sessionId }) {
         background: C.panel2, border: `1px solid ${C.border}`, borderRadius: 4, color: C.text,
         padding: '6px 8px', fontSize: 12, width: '100%',
     };
-    return (_jsxs("div", { style: { display: 'flex', flex: 1, overflow: 'hidden' }, children: [_jsxs("div", { style: { width: 300, flexShrink: 0, background: C.panel, borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }, children: [_jsxs("div", { style: { padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}` }, children: [_jsx(SectionLabel, { text: "Filters" }), _jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: 6 }, children: [_jsxs("select", { value: failure, onChange: e => setFailure(e.target.value), style: selStyle, children: [_jsx("option", { value: "", children: "All Failures" }), FAILURE_ORDER.map(f => _jsx("option", { value: f, children: FAILURE_LABELS[f] }, f))] }), _jsxs("select", { value: severity, onChange: e => setSeverity(e.target.value), style: selStyle, children: [_jsx("option", { value: "", children: "All Severities" }), SEVERITY_ORDER.map(s => _jsx("option", { value: s, children: s }, s))] }), _jsxs("select", { value: sentiment, onChange: e => setSentiment(e.target.value), style: selStyle, children: [_jsx("option", { value: "", children: "All Sentiments" }), ['positive', 'neutral', 'negative', 'frustrated'].map(s => _jsx("option", { value: s, children: s }, s))] }), _jsx("input", { value: flag, onChange: e => setFlag(e.target.value), placeholder: "Flag (exact)", style: selStyle }), _jsx("input", { value: q, onChange: e => setQ(e.target.value), placeholder: "Search text...", style: selStyle })] })] }), _jsxs("div", { style: { overflowY: 'auto', flex: 1 }, children: [loading && _jsx("div", { style: { padding: 16, color: C.muted, fontSize: 13 }, children: "Loading..." }), !loading && records.length === 0 && _jsx("div", { style: { padding: 16, color: C.faint, fontSize: 13 }, children: "No records match." }), records.map(r => (_jsx(RecordListRow, { rec: r, selected: r.id === selectedId, onClick: () => { void loadDetail(r.id); } }, r.id)))] })] }), _jsxs("div", { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }, children: [detailLoading && _jsx(CenterMsg, { text: "Loading record..." }), !detailLoading && !detail && _jsx(CenterMsg, { text: "Select a record to inspect." }), !detailLoading && detail && (_jsx(DetailPanel, { rec: detail, onUpdate: handleUpdate, onDelete: handleDelete }))] })] }));
+    return (_jsxs("div", { style: { display: 'flex', flex: 1, overflow: 'hidden' }, children: [_jsxs("div", { style: { width: 300, flexShrink: 0, background: C.panel, borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }, children: [_jsxs("div", { style: { padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}` }, children: [_jsx(SectionLabel, { text: "Filters" }), _jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: 6 }, children: [_jsxs("select", { value: failure, onChange: e => setFailure(e.target.value), style: selStyle, children: [_jsx("option", { value: "", children: "All Failures" }), FAILURE_ORDER.map(f => _jsx("option", { value: f, children: FAILURE_LABELS[f] }, f))] }), _jsxs("select", { value: severity, onChange: e => setSeverity(e.target.value), style: selStyle, children: [_jsx("option", { value: "", children: "All Severities" }), SEVERITY_ORDER.map(s => _jsx("option", { value: s, children: s }, s))] }), _jsxs("select", { value: sentiment, onChange: e => setSentiment(e.target.value), style: selStyle, children: [_jsx("option", { value: "", children: "All Sentiments" }), ['positive', 'neutral', 'negative', 'frustrated'].map(s => _jsx("option", { value: s, children: s }, s))] }), _jsxs("select", { value: source, onChange: e => setSource(e.target.value), style: selStyle, children: [_jsx("option", { value: "", children: "All Sources" }), _jsx("option", { value: "wtf", children: "/wtf corrections" }), _jsx("option", { value: "paste", children: "Pasted" }), _jsx("option", { value: "upload", children: "Uploaded" })] }), _jsx("input", { value: flag, onChange: e => setFlag(e.target.value), placeholder: "Flag (exact)", style: selStyle }), _jsx("input", { value: q, onChange: e => setQ(e.target.value), placeholder: "Search text...", style: selStyle })] })] }), _jsxs("div", { style: { overflowY: 'auto', flex: 1 }, children: [loading && _jsx("div", { style: { padding: 16, color: C.muted, fontSize: 13 }, children: "Loading..." }), !loading && records.length === 0 && _jsx("div", { style: { padding: 16, color: C.faint, fontSize: 13 }, children: "No records match." }), records.map(r => (_jsx(RecordListRow, { rec: r, selected: r.id === selectedId, onClick: () => { void loadDetail(r.id); } }, r.id)))] })] }), _jsxs("div", { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }, children: [detailLoading && _jsx(CenterMsg, { text: "Loading record..." }), !detailLoading && !detail && _jsx(CenterMsg, { text: "Select a record to inspect." }), !detailLoading && detail && (_jsx(DetailPanel, { rec: detail, onUpdate: handleUpdate, onDelete: handleDelete }))] })] }));
 }
 // ─── View: Heatmap ───────────────────────────────────────────────────────────
 function ViewHeatmap({ sessionId }) {
