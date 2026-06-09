@@ -13,6 +13,7 @@ import SkillsModule from '../modules/skills/SkillsModule';
 import ProjectsView from '../modules/projects/ProjectsView';
 import PromptCenter from '../modules/prompts/PromptCenter';
 import IntelConsole from '../modules/intel/IntelConsole';
+import GraphifyModule from '../modules/memory/GraphifyModule';
 
 interface BrandData {
   displayName: string | null;
@@ -99,13 +100,14 @@ export default function Hub({ brand, onBrandRefresh, onLogout }: Props) {
       {activeModule === 'prompt-lab'     && <PromptCenter bucket="lab" />}
       {activeModule === 'prompt-fixes'   && <PromptCenter bucket="fixes" />}
       {activeModule === 'prompt-intel'   && <IntelConsole />}
+      {activeModule === 'memory-graphify' && <GraphifyModule />}
       {activeModule !== 'dashboard' && activeModule !== 'apiassist' &&
        activeModule !== 'files' && activeModule !== 'agent-bridges' && activeModule !== 'email' &&
        activeModule !== 'calendar' && activeModule !== 'todo' &&
        activeModule !== 'blueprint' && activeModule !== 'systems' && activeModule !== 'skills' &&
        activeModule !== 'projects' && activeModule !== 'project-new' &&
        activeModule !== 'prompt-library' && activeModule !== 'prompt-lab' && activeModule !== 'prompt-fixes' &&
-       activeModule !== 'prompt-intel' &&
+       activeModule !== 'prompt-intel' && activeModule !== 'memory-graphify' &&
        <ComingSoon module={activeModule} />}
     </HubLayout>
   );
