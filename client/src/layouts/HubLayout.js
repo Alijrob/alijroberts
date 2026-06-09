@@ -78,6 +78,24 @@ const PROMPT_CENTER_CHILDREN = [
     },
 ];
 const PROMPT_CENTER_IDS = ['prompt-library', 'prompt-lab', 'prompt-fixes', 'prompt-intel'];
+const MEMORY_CHILDREN = [
+    {
+        id: 'memory-obsidian',
+        label: 'Obsidian',
+        icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("path", { d: "M12 2l7 5-2.5 13H7.5L5 7z" }), _jsx("path", { d: "M12 2v20" }), _jsx("path", { d: "M5 7l7 4 7-4" })] })),
+    },
+    {
+        id: 'memory-graphify',
+        label: 'Graphify',
+        icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("circle", { cx: "5", cy: "6", r: "2.5" }), _jsx("circle", { cx: "19", cy: "7", r: "2.5" }), _jsx("circle", { cx: "12", cy: "18", r: "2.5" }), _jsx("line", { x1: "7", y1: "7", x2: "10.5", y2: "16.5" }), _jsx("line", { x1: "17", y1: "8.5", x2: "13.5", y2: "16.5" }), _jsx("line", { x1: "7.3", y1: "6.4", x2: "16.7", y2: "6.7" })] })),
+    },
+    {
+        id: 'memory-moneta',
+        label: 'MONETA',
+        icon: (_jsxs("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("circle", { cx: "12", cy: "12", r: "9" }), _jsx("path", { d: "M9.5 9.5a2.5 2.5 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2.5 0 0 0 5 0" }), _jsx("line", { x1: "12", y1: "6", x2: "12", y2: "7.5" }), _jsx("line", { x1: "12", y1: "16.5", x2: "12", y2: "18" })] })),
+    },
+];
+const MEMORY_IDS = ['memory-obsidian', 'memory-graphify', 'memory-moneta'];
 const SETTINGS_ICON = (_jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("circle", { cx: "12", cy: "12", r: "3" }), _jsx("path", { d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" })] }));
 function useClock() {
     const [now, setNow] = useState(new Date());
@@ -144,6 +162,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
     const [operationsOpen, setOperationsOpen] = useState(false);
     const [projectsOpen, setProjectsOpen] = useState(false);
     const [promptCenterOpen, setPromptCenterOpen] = useState(false);
+    const [memoryOpen, setMemoryOpen] = useState(false);
     const [projectModalOpen, setProjectModalOpen] = useState(false);
     const [projects, setProjects] = useState([]);
     const fetchProjects = () => fetch('/api/projects').then(r => r.ok ? r.json() : []).then(setProjects).catch(() => { });
@@ -173,6 +192,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
     const isOperationsActive = OPERATIONS_IDS.includes(activeModule);
     const isProjectsActive = PROJECTS_IDS.includes(activeModule);
     const isPromptCenterActive = PROMPT_CENTER_IDS.includes(activeModule);
+    const isMemoryActive = MEMORY_IDS.includes(activeModule);
     const textureLayers = (_jsxs(_Fragment, { children: [_jsx("div", { style: { position: 'absolute', inset: 0, backgroundImage: "url('/uploads/raven.png')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 } }), _jsx("div", { style: { position: 'absolute', inset: 0, background: 'rgba(8,12,35,0.96)', zIndex: 1 } })] }));
     const navItemStyle = (id) => {
         const isActive = activeModule === id;
@@ -338,7 +358,32 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
                                                 width: '100%', textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                                 transition: 'background 0.15s, color 0.15s',
                                             }, children: _jsx("span", { style: { overflow: 'hidden', textOverflow: 'ellipsis' }, children: p.name }) }, p.id));
-                                    })] })), _jsxs("button", { onClick: () => onNavigate('skills'), onMouseEnter: () => setHoveredItem('skills'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Skills' : undefined, style: navItemStyle('skills'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" }) }) }), !collapsed && _jsx("span", { children: "Skills" })] }), _jsxs("button", { onClick: () => collapsed ? onNavigate('prompt-library') : setPromptCenterOpen(o => !o), onMouseEnter: () => setHoveredItem('prompt-center-group'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Prompt Center' : undefined, style: {
+                                    })] })), _jsxs("button", { onClick: () => onNavigate('skills'), onMouseEnter: () => setHoveredItem('skills'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Skills' : undefined, style: navItemStyle('skills'), children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("path", { d: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" }) }) }), !collapsed && _jsx("span", { children: "Skills" })] }), _jsxs("button", { onClick: () => collapsed ? onNavigate('memory-obsidian') : setMemoryOpen(o => !o), onMouseEnter: () => setHoveredItem('memory-group'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Memory' : undefined, style: {
+                                    display: 'flex', alignItems: 'center', gap: '0.85rem',
+                                    padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
+                                    justifyContent: collapsed ? 'center' : 'space-between',
+                                    background: isMemoryActive ? 'rgba(201,168,64,0.16)' : hoveredItem === 'memory-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
+                                    border: 'none',
+                                    borderLeft: isMemoryActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                                    color: isMemoryActive ? GOLD : 'rgba(255,255,255,0.82)',
+                                    cursor: 'pointer', fontSize: '1rem', fontWeight: isMemoryActive ? 700 : 400,
+                                    width: '100%', textAlign: 'left', transition: 'background 0.15s, color 0.15s',
+                                    whiteSpace: 'nowrap', overflow: 'hidden',
+                                }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', gap: '0.85rem' }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: _jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [_jsx("ellipse", { cx: "12", cy: "5", rx: "8", ry: "3" }), _jsx("path", { d: "M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5" }), _jsx("path", { d: "M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" })] }) }), !collapsed && _jsx("span", { children: "Memory" })] }), !collapsed && _jsx("span", { style: { fontSize: '0.65rem', opacity: 0.5 }, children: memoryOpen ? '▲' : '▼' })] }), memoryOpen && !collapsed && (_jsx(_Fragment, { children: MEMORY_CHILDREN.map(item => {
+                                    const isActive = activeModule === item.id;
+                                    const isHov = hoveredItem === `mem-${item.id}`;
+                                    return (_jsxs("button", { onClick: () => onNavigate(item.id), onMouseEnter: () => setHoveredItem(`mem-${item.id}`), onMouseLeave: () => setHoveredItem(null), style: {
+                                            display: 'flex', alignItems: 'center', gap: '0.6rem',
+                                            padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                                            background: isActive ? 'rgba(201,168,64,0.14)' : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                            border: 'none',
+                                            borderLeft: isActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                                            color: isActive ? GOLD : 'rgba(255,255,255,0.7)',
+                                            cursor: 'pointer', fontSize: '0.92rem', fontWeight: isActive ? 700 : 400,
+                                            width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                                            transition: 'background 0.15s, color 0.15s',
+                                        }, children: [_jsx("span", { style: { flexShrink: 0, display: 'flex' }, children: item.icon }), _jsx("span", { children: item.label })] }, item.id));
+                                }) })), _jsxs("button", { onClick: () => collapsed ? onNavigate('prompt-library') : setPromptCenterOpen(o => !o), onMouseEnter: () => setHoveredItem('prompt-center-group'), onMouseLeave: () => setHoveredItem(null), title: collapsed ? 'Prompt Center' : undefined, style: {
                                     display: 'flex', alignItems: 'center', gap: '0.85rem',
                                     padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
                                     justifyContent: collapsed ? 'center' : 'space-between',

@@ -5,7 +5,7 @@ import Chat from '../modules/chat/Chat';
 import SettingsWindow, { type SettingsSection } from '../modules/settings/SettingsWindow';
 import ProjectIntakeModal from '../modules/projects/ProjectIntakeModal';
 
-export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills' | 'prompt-library' | 'prompt-lab' | 'prompt-fixes' | 'prompt-intel';
+export type HubModule = 'dashboard' | 'agenda' | 'crm' | 'todo' | 'calendar' | 'email' | 'files' | 'operations' | 'raven' | 'daedalus' | 'blueprint' | 'newspaper' | 'settings' | 'apiassist' | 'agent-bridges' | 'systems' | 'projects' | 'project-new' | 'skills' | 'prompt-library' | 'prompt-lab' | 'prompt-fixes' | 'prompt-intel' | 'memory-obsidian' | 'memory-graphify' | 'memory-moneta';
 
 interface BrandData {
   displayName: string | null;
@@ -168,6 +168,39 @@ const PROMPT_CENTER_CHILDREN: { id: HubModule; label: string; icon: React.ReactN
 
 const PROMPT_CENTER_IDS: HubModule[] = ['prompt-library', 'prompt-lab', 'prompt-fixes', 'prompt-intel'];
 
+const MEMORY_CHILDREN: { id: HubModule; label: string; icon: React.ReactNode }[] = [
+  {
+    id: 'memory-obsidian',
+    label: 'Obsidian',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2l7 5-2.5 13H7.5L5 7z" /><path d="M12 2v20" /><path d="M5 7l7 4 7-4" />
+      </svg>
+    ),
+  },
+  {
+    id: 'memory-graphify',
+    label: 'Graphify',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="5" cy="6" r="2.5" /><circle cx="19" cy="7" r="2.5" /><circle cx="12" cy="18" r="2.5" />
+        <line x1="7" y1="7" x2="10.5" y2="16.5" /><line x1="17" y1="8.5" x2="13.5" y2="16.5" /><line x1="7.3" y1="6.4" x2="16.7" y2="6.7" />
+      </svg>
+    ),
+  },
+  {
+    id: 'memory-moneta',
+    label: 'MONETA',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2.5 0 0 0 5 0" /><line x1="12" y1="6" x2="12" y2="7.5" /><line x1="12" y1="16.5" x2="12" y2="18" />
+      </svg>
+    ),
+  },
+];
+
+const MEMORY_IDS: HubModule[] = ['memory-obsidian', 'memory-graphify', 'memory-moneta'];
+
 const SETTINGS_ICON = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" />
@@ -241,6 +274,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
   const [operationsOpen, setOperationsOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [promptCenterOpen, setPromptCenterOpen] = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState(false);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [projects, setProjects] = useState<Array<{ id: number; name: string; status: string }>>([]);
   const fetchProjects = () => fetch('/api/projects').then(r => r.ok ? r.json() : []).then(setProjects).catch(() => {});
@@ -274,6 +308,7 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
   const isOperationsActive = OPERATIONS_IDS.includes(activeModule);
   const isProjectsActive = PROJECTS_IDS.includes(activeModule);
   const isPromptCenterActive = PROMPT_CENTER_IDS.includes(activeModule);
+  const isMemoryActive = MEMORY_IDS.includes(activeModule);
 
   const textureLayers = (
     <>
@@ -690,6 +725,69 @@ export default function HubLayout({ activeModule, onNavigate, collapsed, onToggl
             </span>
             {!collapsed && <span>Skills</span>}
           </button>
+
+          {/* Memory group (dropdown) */}
+          <button
+            onClick={() => collapsed ? onNavigate('memory-obsidian') : setMemoryOpen(o => !o)}
+            onMouseEnter={() => setHoveredItem('memory-group')}
+            onMouseLeave={() => setHoveredItem(null)}
+            title={collapsed ? 'Memory' : undefined}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.85rem',
+              padding: collapsed ? '0.8rem 0' : '0.8rem 1.1rem',
+              justifyContent: collapsed ? 'center' : 'space-between',
+              background: isMemoryActive ? 'rgba(201,168,64,0.16)' : hoveredItem === 'memory-group' ? 'rgba(255,255,255,0.07)' : 'transparent',
+              border: 'none',
+              borderLeft: isMemoryActive ? `3px solid ${GOLD}` : '3px solid transparent',
+              color: isMemoryActive ? GOLD : 'rgba(255,255,255,0.82)',
+              cursor: 'pointer', fontSize: '1rem', fontWeight: isMemoryActive ? 700 : 400,
+              width: '100%', textAlign: 'left', transition: 'background 0.15s, color 0.15s',
+              whiteSpace: 'nowrap', overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <span style={{ flexShrink: 0, display: 'flex' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <ellipse cx="12" cy="5" rx="8" ry="3" />
+                  <path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
+                  <path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
+                </svg>
+              </span>
+              {!collapsed && <span>Memory</span>}
+            </div>
+            {!collapsed && <span style={{ fontSize: '0.65rem', opacity: 0.5 }}>{memoryOpen ? '▲' : '▼'}</span>}
+          </button>
+
+          {memoryOpen && !collapsed && (
+            <>
+              {MEMORY_CHILDREN.map(item => {
+                const isActive = activeModule === item.id;
+                const isHov = hoveredItem === `mem-${item.id}`;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onNavigate(item.id)}
+                    onMouseEnter={() => setHoveredItem(`mem-${item.id}`)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.6rem',
+                      padding: '0.65rem 1.1rem 0.65rem 2.2rem',
+                      background: isActive ? 'rgba(201,168,64,0.14)' : isHov ? 'rgba(255,255,255,0.05)' : 'transparent',
+                      border: 'none',
+                      borderLeft: isActive ? `3px solid ${GOLD}` : '3px solid transparent',
+                      color: isActive ? GOLD : 'rgba(255,255,255,0.7)',
+                      cursor: 'pointer', fontSize: '0.92rem', fontWeight: isActive ? 700 : 400,
+                      width: '100%', textAlign: 'left', whiteSpace: 'nowrap',
+                      transition: 'background 0.15s, color 0.15s',
+                    }}
+                  >
+                    <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </>
+          )}
 
           {/* Prompt Center group (dropdown) */}
           <button

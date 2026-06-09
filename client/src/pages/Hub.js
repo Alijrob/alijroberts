@@ -39,6 +39,9 @@ function ComingSoon({ module }) {
         'prompt-lab': 'Prompt Lab',
         'prompt-fixes': 'Prompt Fixes',
         'prompt-intel': 'Operational Intelligence',
+        'memory-obsidian': 'Obsidian',
+        'memory-graphify': 'Graphify',
+        'memory-moneta': 'MONETA',
     };
     return (_jsxs("div", { style: { padding: '4rem 2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: '#888' }, children: [_jsx("p", { style: { fontSize: '1.1rem', fontWeight: 600, color: '#111', margin: 0 }, children: labels[module] }), _jsx("p", { style: { fontSize: '0.875rem', margin: 0 }, children: "This module is coming soon." })] }));
 }
@@ -47,7 +50,7 @@ export default function Hub({ brand, onBrandRefresh, onLogout }) {
         if (typeof window === 'undefined')
             return 'dashboard';
         const hash = window.location.hash.replace(/^#/, '');
-        const valid = ['dashboard', 'agenda', 'crm', 'todo', 'calendar', 'email', 'files', 'operations', 'raven', 'daedalus', 'blueprint', 'newspaper', 'settings', 'apiassist', 'agent-bridges', 'systems', 'projects', 'project-new', 'skills', 'prompt-library', 'prompt-lab', 'prompt-fixes', 'prompt-intel'];
+        const valid = ['dashboard', 'agenda', 'crm', 'todo', 'calendar', 'email', 'files', 'operations', 'raven', 'daedalus', 'blueprint', 'newspaper', 'settings', 'apiassist', 'agent-bridges', 'systems', 'projects', 'project-new', 'skills', 'prompt-library', 'prompt-lab', 'prompt-fixes', 'prompt-intel', 'memory-obsidian', 'memory-graphify', 'memory-moneta'];
         return valid.includes(hash) ? hash : 'dashboard';
     });
     const [collapsed, setCollapsed] = useState(false);
